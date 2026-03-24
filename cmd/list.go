@@ -12,10 +12,15 @@ var listCmd = &cobra.Command{
 	Short: "List search results",
 	Long: `List papers from the search results JSON file.
 
+DEFAULTS:
+  -f arxiv-results.json   Results file
+  -n 0                    Show all results (0 = no limit)
+
 Examples:
-  arxs list
-  arxs list --verbose
-  arxs list -f ./my-results.json -n 10`,
+  arxs list                        # List all results
+  arxs list --verbose              # Show with abstracts
+  arxs list -n 10                  # First 10 only
+  arxs list -f ./gan-papers.json   # From specific file`,
 	RunE: runList,
 }
 
@@ -61,11 +66,7 @@ func runList(cmd *cobra.Command, args []string) error {
 		if len(p.Categories) > 0 {
 			cat = p.Categories[0]
 		}
-		title := p.Title
-		if !flagListVerbose && len(title) > 60 {
-			title = title[:57] + "..."
-		}
-		fmt.Printf(" %-4d %-12s %-10s %s\n", i+1, published, cat, title)
+		fmt.Printf(" %-4d %-12s %-10s %s\n", i+1, published, cat, p.Title)
 
 		if flagListVerbose {
 			fmt.Printf("      Authors: %s\n", joinStrings(p.Authors))
