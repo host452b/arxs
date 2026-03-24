@@ -12,6 +12,7 @@ type Paper struct {
 	PDFUrl     string   `json:"pdf_url"`
 	HTMLUrl    string   `json:"html_url"`
 	AbsUrl     string   `json:"abs_url"`
+	Citations  int      `json:"citations"`
 }
 
 // SearchResult is the top-level JSON output structure.
