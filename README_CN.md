@@ -106,7 +106,20 @@ arxs search -t "RLHF" -b "reward model" --op or
 
 #### 按学科分类筛选
 
-支持的分类：`cs`（计算机科学）、`math`（数学）、`physics`（物理学）、`q-bio`（定量生物学）、`q-fin`（定量金融）、`stat`（统计学）、`eess`（电气工程与系统科学）、`econ`（经济学）
+使用 `-s` 按 arXiv 学科分类过滤，多个分类用逗号分隔。
+
+| 参数值 | 学科 | 覆盖范围 |
+|--------|------|----------|
+| `cs` | 计算机科学 | cs.AI, cs.CL, cs.CV, cs.LG, ... |
+| `math` | 数学 | math.AG, math.CO, math.PR, ... |
+| `physics` | 物理学 | astro-ph, cond-mat, gr-qc, hep-*, nlin, nucl-*, quant-ph, ... |
+| `stat` | 统计学 | stat.ML, stat.ME, stat.TH, ... |
+| `eess` | 电气工程与系统科学 | eess.AS, eess.IV, eess.SP, ... |
+| `econ` | 经济学 | econ.EM, econ.GN, econ.TH |
+| `q-bio` | 定量生物学 | q-bio.BM, q-bio.GN, q-bio.NC, ... |
+| `q-fin` | 定量金融 | q-fin.CP, q-fin.PM, q-fin.RM, ... |
+
+> 不加 `-s` 参数 = 搜索所有分类。
 
 ```bash
 # 只搜索计算机科学
@@ -114,6 +127,9 @@ arxs search -k "LLM" -s cs
 
 # 搜索计算机科学和统计学
 arxs search -k "machine learning" -s cs,stat
+
+# 只搜索物理学
+arxs search -k "black hole" -s physics
 ```
 
 #### 按日期筛选

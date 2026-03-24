@@ -106,7 +106,20 @@ arxs search -t "RLHF" -b "reward model" --op or
 
 #### Filter by subject
 
-Supported: `cs`, `math`, `physics`, `q-bio`, `q-fin`, `stat`, `eess`, `econ`
+Use `-s` to filter by arXiv subject category. Multiple categories can be comma-separated.
+
+| Value | Subject | Covers |
+|-------|---------|--------|
+| `cs` | Computer Science | cs.AI, cs.CL, cs.CV, cs.LG, ... |
+| `math` | Mathematics | math.AG, math.CO, math.PR, ... |
+| `physics` | Physics | astro-ph, cond-mat, gr-qc, hep-*, nlin, nucl-*, quant-ph, ... |
+| `stat` | Statistics | stat.ML, stat.ME, stat.TH, ... |
+| `eess` | Electrical Engineering & Systems Science | eess.AS, eess.IV, eess.SP, ... |
+| `econ` | Economics | econ.EM, econ.GN, econ.TH |
+| `q-bio` | Quantitative Biology | q-bio.BM, q-bio.GN, q-bio.NC, ... |
+| `q-fin` | Quantitative Finance | q-fin.CP, q-fin.PM, q-fin.RM, ... |
+
+> No `-s` flag = search all categories.
 
 ```bash
 # Computer science only
@@ -114,6 +127,9 @@ arxs search -k "LLM" -s cs
 
 # Computer science and statistics
 arxs search -k "machine learning" -s cs,stat
+
+# Physics only
+arxs search -k "black hole" -s physics
 ```
 
 #### Filter by date
