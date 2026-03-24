@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -82,7 +83,7 @@ func init() {
 	searchCmd.Flags().IntVarP(&flagMax, "max", "m", 50, "Max results (1-2000)")
 	searchCmd.Flags().StringVarP(&flagOutput, "output", "o", "arxiv-results.json", "Output JSON file path")
 	searchCmd.Flags().BoolVar(&flagNoCache, "no-cache", false, "Skip cache")
-	searchCmd.Flags().StringVar(&flagSort, "sort", "submitted", "Sort by: relevance, submitted, updated")
+	searchCmd.Flags().StringVar(&flagSort, "sort", "submitted", "Sort by: relevance, submitted, updated, citations")
 	searchCmd.Flags().StringVar(&flagSortOrder, "order", "desc", "Sort order: asc, desc")
 
 	rootCmd.AddCommand(searchCmd)
@@ -165,9 +166,21 @@ func runSearch(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// Fetch citation counts from Semantic Scholar
+	if len(result.Papers) > 0 {
+		fmt.Fprintf(os.Stderr, "Fetching citation counts...\n")
+		cf := api.NewCitationFetcher()
+		_ = cf.FetchCitations(result.Papers) // Non-fatal if it fails
+	}
+
 	// Update query metadata
 	result.Query.From = from
 	result.Query.To = to
+
+	// Sort by citations if requested
+	if flagSort == "citations" {
+		sortByCitations(result.Papers)
+	}
 
 	// Cache result
 	if c != nil {
@@ -198,7 +211,7 @@ func outputResults(result *model.SearchResult) error {
 	}
 
 	// Print table
-	fmt.Printf(" %-4s %-12s %-10s %s\n", "#", "Published", "Category", "Title")
+	fmt.Printf(" %-4s %-12s %-10s %-7s %s\n", "#", "Published", "Category", "Cited", "Title")
 	for i, p := range result.Papers {
 		published := p.Published
 		if len(published) >= 10 {
@@ -208,10 +221,20 @@ func outputResults(result *model.SearchResult) error {
 		if len(p.Categories) > 0 {
 			cat = p.Categories[0]
 		}
-		fmt.Printf(" %-4d %-12s %-10s %s\n", i+1, published, cat, p.Title)
+		cited := "-"
+		if p.Citations > 0 {
+			cited = fmt.Sprintf("%d", p.Citations)
+		}
+		fmt.Printf(" %-4d %-12s %-10s %-7s %s\n", i+1, published, cat, cited, p.Title)
 	}
 
 	return nil
+}
+
+func sortByCitations(papers []model.Paper) {
+	sort.Slice(papers, func(i, j int) bool {
+		return papers[i].Citations > papers[j].Citations
+	})
 }
 
 func parseRecent(s string) (string, string, error) {

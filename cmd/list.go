@@ -55,7 +55,7 @@ func runList(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("Results from %s (%d papers)\n\n", flagListFile, len(result.Papers))
-	fmt.Printf(" %-4s %-12s %-10s %s\n", "#", "Published", "Category", "Title")
+	fmt.Printf(" %-4s %-12s %-10s %-7s %s\n", "#", "Published", "Category", "Cited", "Title")
 
 	for i, p := range papers {
 		published := p.Published
@@ -66,7 +66,11 @@ func runList(cmd *cobra.Command, args []string) error {
 		if len(p.Categories) > 0 {
 			cat = p.Categories[0]
 		}
-		fmt.Printf(" %-4d %-12s %-10s %s\n", i+1, published, cat, p.Title)
+		cited := "-"
+		if p.Citations > 0 {
+			cited = fmt.Sprintf("%d", p.Citations)
+		}
+		fmt.Printf(" %-4d %-12s %-10s %-7s %s\n", i+1, published, cat, cited, p.Title)
 
 		if flagListVerbose {
 			fmt.Printf("      Authors: %s\n", joinStrings(p.Authors))
