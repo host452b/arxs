@@ -19,24 +19,36 @@ var searchCmd = &cobra.Command{
 	Short: "Search arXiv papers",
 	Long: `Search arXiv papers by title, abstract, author, or all fields.
 
+SEARCH FLAGS:
+  -k   Search all fields (title OR abstract OR author)
+  -t   Search by title only
+  -b   Search by abstract only
+  -a   Search by author only
+
+KEYWORD SYNTAX:
+  Words without operators use implicit AND: "reinforcement learning" = "reinforcement and learning"
+  Use "or" / "and" to combine: "transformer or attention", "vaswani and hinton"
+  Precedence: and > or, so "A or B and C" = "A or (B and C)"
+
+CROSS-FIELD:
+  Multiple -k/-t/-b/-a flags default to AND. Use --op or to switch.
+
+DEFAULTS:
+  --op and           Cross-field operator
+  --max 50           Max results (range: 1-2000)
+  --sort submitted   Sort by: relevance, submitted, updated
+  --order desc       Sort direction: asc, desc
+  -o arxiv-results.json   Output file
+
 Examples:
-  # Search all fields for "transformer"
-  arxs search -k "transformer"
-
-  # Search by title with OR
-  arxs search -t "transformer or attention"
-
-  # Search by title AND author
-  arxs search -t "diffusion model" -a "ho and song"
-
-  # Cross-field OR
-  arxs search -t "RLHF" -b "reward model" --op or
-
-  # Filter by subject and date
-  arxs search -k "LLM" -s cs,stat --from 2024-01
-
-  # Recent papers
-  arxs search -k "quantum computing" --recent 12m`,
+  arxs search -k "transformer"                               # All fields
+  arxs search -t "transformer or attention"                   # Title with OR
+  arxs search -t "diffusion model" -a "ho and song"           # Title AND author
+  arxs search -t "RLHF" -b "reward model" --op or            # Cross-field OR
+  arxs search -k "LLM" -s cs,stat --from 2024-01             # Subject + date
+  arxs search -k "quantum computing" --recent 12m            # Recent papers
+  arxs search -k "GAN" --max 100 --sort relevance            # More results, by relevance
+  arxs search -k "black hole" -s physics -o physics.json     # Custom output file`,
 	RunE: runSearch,
 }
 
@@ -196,11 +208,7 @@ func outputResults(result *model.SearchResult) error {
 		if len(p.Categories) > 0 {
 			cat = p.Categories[0]
 		}
-		title := p.Title
-		if len(title) > 60 {
-			title = title[:57] + "..."
-		}
-		fmt.Printf(" %-4d %-12s %-10s %s\n", i+1, published, cat, title)
+		fmt.Printf(" %-4d %-12s %-10s %s\n", i+1, published, cat, p.Title)
 	}
 
 	return nil

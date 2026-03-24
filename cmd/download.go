@@ -20,11 +20,21 @@ var downloadCmd = &cobra.Command{
 	Short: "Download papers (PDF or abstract)",
 	Long: `Download PDFs or abstracts from search results.
 
+Files are named {arXiv_ID}.pdf or {arXiv_ID}.txt.
+Existing files are skipped unless --overwrite is set.
+Downloads >10 papers with --all will prompt for confirmation.
+
+DEFAULTS:
+  -f arxiv-results.json   Results file
+  -d .                    Save to current directory
+
 Examples:
-  arxs download 1 3 5            # Download PDFs for paper #1, #3, #5
-  arxs download --all             # Download all PDFs
-  arxs download --abs-only 2 4    # Save abstracts as .txt
-  arxs download 1 --dir ./papers  # Save to specific directory`,
+  arxs download 1 3 5              # Download PDFs for paper #1, #3, #5
+  arxs download --all               # Download all PDFs
+  arxs download --abs-only 2 4      # Save abstracts as .txt
+  arxs download 1 --dir ./papers    # Save to specific directory
+  arxs download 1 -f ./gan.json     # From specific results file
+  arxs download 1 --overwrite       # Overwrite existing files`,
 	RunE: runDownload,
 }
 
