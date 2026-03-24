@@ -216,11 +216,14 @@ arxs about
 
 ## 合规说明
 
-- 使用 arXiv 官方 API（`export.arxiv.org`），不爬取网页
-- 请求间隔 ≥ 3 秒，硬编码不可绕过
-- 同一查询同一天内使用缓存，减少不必要的请求
-- 所有请求携带 User-Agent 标识
-- 遵守 [arXiv API Terms of Use](https://arxiv.org/help/api/tou)
+本工具严格遵守 [arXiv 的 robots.txt](https://arxiv.org/robots.txt) 爬虫协议：
+
+- **不爬取网页**：仅使用 arXiv 官方 API（`export.arxiv.org`），不访问网站页面
+- **请求限速**：间隔 ≥ 3 秒，硬编码不可绕过——超过 robots.txt 中 `Crawl-delay: 15` 的要求（因为我们使用专用 API 端点而非网站）
+- **同日缓存**：避免重复请求；arXiv 数据每日 UTC 午夜更新一次
+- **User-Agent 标识**：所有请求标识为 `arxs/<version>`，遵循 robots.txt 最佳实践
+- **不访问受限路径**：工具绝不访问 `/search`、`/auth`、`/user` 或 robots.txt 中禁止的任何路径
+- 遵守 [arXiv API 使用条款](https://arxiv.org/help/api/tou)
 
 ## 使用规则与文明公约
 
