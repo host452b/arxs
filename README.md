@@ -8,11 +8,25 @@ A CLI tool to search and download arXiv papers. Uses the official arXiv API with
 
 ## Install
 
+**One-liner (macOS / Linux):**
+
 ```bash
-go install github.com/joejiang/arxs@latest
+curl -fsSL https://raw.githubusercontent.com/host452b/arxs/main/install.sh | sh
 ```
 
-Or build from source:
+**Windows (PowerShell):**
+
+```powershell
+irm https://raw.githubusercontent.com/host452b/arxs/main/install.ps1 | iex
+```
+
+**Go install:**
+
+```bash
+go install github.com/host452b/arxs@latest
+```
+
+**Build from source:**
 
 ```bash
 git clone https://github.com/host452b/arxs.git
