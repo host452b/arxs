@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $repo = "host452b/arxs"
-$version = "v1.0.1"
+$version = "v1.0.2"
 $binary = "arxs-windows-amd64.exe"
 $url = "https://github.com/$repo/releases/download/$version/$binary"
 $installDir = "$env:LOCALAPPDATA\arxs"
