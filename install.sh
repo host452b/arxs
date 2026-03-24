@@ -2,7 +2,7 @@
 set -e
 
 REPO="host452b/arxs"
-VERSION="v1.0.0"
+VERSION="v1.0.1"
 INSTALL_DIR="/usr/local/bin"
 
 # Detect OS
