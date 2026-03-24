@@ -1,0 +1,5 @@
+arxs
+arxiv-results.json
+*.pdf
+*.txt
+.arxs-cache/
