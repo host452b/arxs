@@ -3,14 +3,23 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/joejiang/arxs/internal/store"
 	"github.com/spf13/cobra"
 )
 
 var listCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List search results",
-	Long: `List papers from the search results JSON file.
+	Short: "List papers from search results",
+	Long: `List papers from a search results JSON file.
+
+Supports both arXiv-only results and multi-source results (produced by search -s).
+Papers are numbered starting from 1 — use these numbers with 'arxs download'.
+
+OUTPUT COLUMNS:
+  #         Result number (use with 'arxs download')
+  Published Date (YYYY-MM-DD)
+  Category  arXiv category (e.g. cs.AI) or source name for non-arXiv papers
+  Cited     Citation count (arXiv papers only; - if unavailable)
+  Title     Full paper title
 
 DEFAULTS:
   -f arxiv-results.json   Results file
@@ -18,9 +27,9 @@ DEFAULTS:
 
 Examples:
   arxs list                        # List all results
-  arxs list --verbose              # Show with abstracts
-  arxs list -n 10                  # First 10 only
-  arxs list -f ./gan-papers.json   # From specific file`,
+  arxs list --verbose              # Show with abstracts, authors, URLs
+  arxs list -n 10                  # First 10 papers only
+  arxs list -f ./papers.json       # From specific file`,
 	RunE: runList,
 }
 
@@ -39,14 +48,9 @@ func init() {
 }
 
 func runList(cmd *cobra.Command, args []string) error {
-	result, err := store.ReadResults(flagListFile)
+	papers, err := loadPapersFromFile(flagListFile)
 	if err != nil {
 		return fmt.Errorf("cannot read %s: %w\nRun 'arxs search' first to create results.", flagListFile, err)
-	}
-
-	papers := result.Papers
-	if flagListLimit > 0 && flagListLimit < len(papers) {
-		papers = papers[:flagListLimit]
 	}
 
 	if len(papers) == 0 {
@@ -54,7 +58,12 @@ func runList(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	fmt.Printf("Results from %s (%d papers)\n\n", flagListFile, len(result.Papers))
+	total := len(papers)
+	if flagListLimit > 0 && flagListLimit < len(papers) {
+		papers = papers[:flagListLimit]
+	}
+
+	fmt.Printf("Results from %s (%d papers)\n\n", flagListFile, total)
 	fmt.Printf(" %-4s %-12s %-10s %-7s %s\n", "#", "Published", "Category", "Cited", "Title")
 
 	for i, p := range papers {
@@ -62,7 +71,7 @@ func runList(cmd *cobra.Command, args []string) error {
 		if len(published) >= 10 {
 			published = published[:10]
 		}
-		cat := ""
+		cat := p.Source
 		if len(p.Categories) > 0 {
 			cat = p.Categories[0]
 		}

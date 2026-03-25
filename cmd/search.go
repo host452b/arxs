@@ -26,39 +26,95 @@ import (
 
 var searchCmd = &cobra.Command{
 	Use:   "search",
-	Short: "Search arXiv papers",
-	Long: `Search arXiv papers by title, abstract, author, or all fields.
+	Short: "Search papers across arXiv, Zenodo, SocArXiv, EdArXiv, OpenAlex",
+	Long: `Search academic papers by keyword, title, abstract, or author.
+
+Without -s: searches arXiv only (original behavior, backward compatible).
+With -s:    routes to relevant sources based on subject, aggregates and deduplicates results.
 
 SEARCH FLAGS:
-  -k   Search all fields (title OR abstract OR author)
-  -t   Search by title only
-  -b   Search by abstract only
-  -a   Search by author only
+  -k, --key        Search all fields (title OR abstract OR author)
+  -t, --key-title  Search by title only
+  -b, --key-abs    Search by abstract only
+  -a, --key-author Search by author only
+
+At least one of -k/-t/-b/-a is required.
 
 KEYWORD SYNTAX:
-  Words without operators use implicit AND: "reinforcement learning" = "reinforcement and learning"
-  Use "or" / "and" to combine: "transformer or attention", "vaswani and hinton"
-  Precedence: and > or, so "A or B and C" = "A or (B and C)"
+  "transformer"                 Single keyword
+  "reinforcement learning"      Implicit AND: finds both words
+  "transformer or attention"    OR: match either term
+  "vaswani and hinton"          AND: match both terms
+  "A or B and C"                Precedence: AND > OR → A or (B and C)
 
-CROSS-FIELD:
-  Multiple -k/-t/-b/-a flags default to AND. Use --op or to switch.
+CROSS-FIELD OPERATOR (--op):
+  Default AND: all field flags must match.
+  --op or: any field flag may match.
+  Example: arxs search -t "RLHF" -b "reward model" --op or
 
-DEFAULTS:
-  --op and           Cross-field operator
-  --max 50           Max results (range: 1-2000)
-  --sort submitted   Sort by: relevance, submitted, updated
-  --order desc       Sort direction: asc, desc
-  -o arxiv-results.json   Output file
+SUBJECT CATEGORIES (-s):
+  Alias        Domain               Primary Sources
+  ──────────────────────────────────────────────────────────────
+  cs           Computer Science     arXiv › Zenodo › SocArXiv
+  physics      All Physics          arXiv › Zenodo
+  math         Mathematics          arXiv › Zenodo
+  stat         Statistics           arXiv › Zenodo
+  q-fin        Quant Finance        arXiv › OpenAlex › Zenodo
+  econ         Economics            arXiv › OpenAlex › Zenodo
+  q-bio        Quant Biology        arXiv › Zenodo
+  eess         EE & Sys Science     arXiv › Zenodo
+  sociology    Sociology            SocArXiv › OpenAlex › Zenodo
+  education    Education            EdArXiv › SocArXiv › Zenodo
+  philosophy   Philosophy           OpenAlex › SocArXiv › Zenodo
+  law          Law                  SocArXiv › OpenAlex › Zenodo
+  psychology   Psychology           SocArXiv › EdArXiv › Zenodo
 
-Examples:
-  arxs search -k "transformer"                               # All fields
-  arxs search -t "transformer or attention"                   # Title with OR
-  arxs search -t "diffusion model" -a "ho and song"           # Title AND author
-  arxs search -t "RLHF" -b "reward model" --op or            # Cross-field OR
-  arxs search -k "LLM" -s cs.AI -s stat --from 2024-01       # Subject + date
-  arxs search -k "quantum computing" --recent 12m            # Recent papers
-  arxs search -k "GAN" --max 100 --sort relevance            # More results, by relevance
-  arxs search -k "black hole" -s physics -o physics.json     # Custom output file`,
+  Also accepts any arXiv category code: cs.AI, cs.LG, cs.CL, hep-th, quant-ph, math.AG, ...
+  Multiple -s flags: OR logic  →  -s cs.AI -s cs.LG
+  Comma-separated:             →  -s cs.AI,cs.LG
+  Omit -s to search arXiv only (no subject routing).
+
+DATE FILTERS:
+  --from 2024-01          Start date (YYYY, YYYY-MM, or YYYY-MM-DD)
+  --to   2025-03          End date   (same format)
+  --recent 12m            Last N months: 6m, 12m, 24m
+  --recent 1y             Last N years:  1y, 2y
+  (--recent and --from/--to are mutually exclusive)
+
+SORT & LIMITS:
+  --max 100               Max results per source (1–2000, default 50)
+  --sort submitted        Sort by: submitted, updated, relevance, citations (default: submitted)
+  --order desc            Sort order: asc, desc (default: desc)
+
+OUTPUT:
+  -o, --output FILE       Output JSON file (default: arxiv-results.json)
+  --no-cache              Bypass same-day cache and fetch fresh results
+
+  Multi-source JSON schema (when -s is used):
+    { "total": N, "query": {...}, "groups": [
+        { "source": "arxiv",   "count": N, "papers": [...] },
+        { "source": "zenodo",  "count": N, "papers": [...] },
+        { "source": "socarxiv","count": N, "papers": [...] }
+    ]}
+  arXiv-only JSON schema:
+    { "total_results": N, "return_count": N, "query": {...}, "papers": [...] }
+
+  Paper object fields: id, title, authors[], abstract, published, updated,
+    categories[], doi, pdf_url, abs_url, source_url, citations, source.
+
+EXAMPLES:
+  arxs search -k "transformer"                          # arXiv, all fields
+  arxs search -t "transformer or attention"             # title with OR
+  arxs search -t "diffusion model" -a "ho and song"     # title AND author
+  arxs search -t "RLHF" -b "reward model" --op or      # cross-field OR
+  arxs search -k "LLM" -s cs.AI --from 2024-01         # subject + date filter
+  arxs search -k "LLM" -s cs.AI -s cs.LG               # multiple subjects (OR)
+  arxs search -k "inequality" -s sociology -s law       # social sciences multi-source
+  arxs search -k "curriculum" -s education -s psychology # cross-discipline
+  arxs search -k "option pricing" -s q-fin --recent 12m # recent finance papers
+  arxs search -k "GAN" --max 100 --sort relevance       # relevance sort
+  arxs search -k "GAN" --sort citations                 # sort by citation count
+  arxs search -k "black hole" -s physics -o papers.json # custom output file`,
 	RunE: runSearch,
 }
 
