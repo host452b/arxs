@@ -6,10 +6,10 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/joejiang/arxs/internal/log"
-	"github.com/joejiang/arxs/internal/model"
-	"github.com/joejiang/arxs/internal/orchestrator"
-	"github.com/joejiang/arxs/internal/provider"
+	"github.com/host452b/arxs/internal/log"
+	"github.com/host452b/arxs/internal/model"
+	"github.com/host452b/arxs/internal/orchestrator"
+	"github.com/host452b/arxs/internal/provider"
 )
 
 // mockProvider is a controllable Provider for testing.

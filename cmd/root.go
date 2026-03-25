@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/joejiang/arxs/internal/log"
+	"github.com/host452b/arxs/internal/log"
 	"github.com/spf13/cobra"
 )
 
-const version = "2.0.0"
+const version = "2.0.1"
 
 var flagDebug bool
 
@@ -107,6 +107,8 @@ func Execute() {
 
 func init() {
 	rootCmd.Version = version
+	rootCmd.SilenceUsage = true  // don't dump usage on runtime errors
+	rootCmd.SilenceErrors = true // let Execute() print the error once, cleanly
 	rootCmd.SetVersionTemplate(fmt.Sprintf(
 		"arxs v%s — arXiv, Zenodo, SocArXiv, EdArXiv, OpenAlex\nThank you to arXiv for use of its open access interoperability.\n", version))
 

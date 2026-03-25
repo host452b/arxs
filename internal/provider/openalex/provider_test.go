@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/joejiang/arxs/internal/provider"
-	oap "github.com/joejiang/arxs/internal/provider/openalex"
+	"github.com/host452b/arxs/internal/provider"
+	oap "github.com/host452b/arxs/internal/provider/openalex"
 )
 
 func sampleOpenAlexResponse() []byte {

@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/joejiang/arxs/internal/model"
-	"github.com/joejiang/arxs/internal/provider"
-	"github.com/joejiang/arxs/internal/store"
+	"github.com/host452b/arxs/internal/model"
+	"github.com/host452b/arxs/internal/provider"
+	"github.com/host452b/arxs/internal/store"
 	"github.com/spf13/cobra"
 )
 

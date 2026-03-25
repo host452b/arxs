@@ -9,9 +9,9 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/joejiang/arxs/internal/api"
-	"github.com/joejiang/arxs/internal/model"
-	"github.com/joejiang/arxs/internal/provider"
+	"github.com/host452b/arxs/internal/api"
+	"github.com/host452b/arxs/internal/model"
+	"github.com/host452b/arxs/internal/provider"
 )
 
 const defaultBaseURL = "https://api.osf.io/v2"

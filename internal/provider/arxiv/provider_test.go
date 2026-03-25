@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/joejiang/arxs/internal/model"
-	"github.com/joejiang/arxs/internal/provider"
-	arxivprovider "github.com/joejiang/arxs/internal/provider/arxiv"
+	"github.com/host452b/arxs/internal/model"
+	"github.com/host452b/arxs/internal/provider"
+	arxivprovider "github.com/host452b/arxs/internal/provider/arxiv"
 )
 
 func sampleAtomXML() []byte {

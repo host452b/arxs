@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/joejiang/arxs/internal/provider"
-	zenodoprovider "github.com/joejiang/arxs/internal/provider/zenodo"
+	"github.com/host452b/arxs/internal/provider"
+	zenodoprovider "github.com/host452b/arxs/internal/provider/zenodo"
 )
 
 func sampleZenodoResponse() []byte {

@@ -3,8 +3,8 @@ package subject_test
 
 import (
 	"testing"
-	"github.com/joejiang/arxs/internal/provider"
-	"github.com/joejiang/arxs/internal/subject"
+	"github.com/host452b/arxs/internal/provider"
+	"github.com/host452b/arxs/internal/subject"
 )
 
 func TestLookup_CSAI(t *testing.T) {

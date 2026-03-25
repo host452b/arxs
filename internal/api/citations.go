@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/joejiang/arxs/internal/model"
+	"github.com/host452b/arxs/internal/model"
 )
 
 const (

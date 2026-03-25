@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/joejiang/arxs/internal/parser"
+	"github.com/host452b/arxs/internal/parser"
 )
 
 // QueryParams holds the user's search parameters.
