@@ -1,10 +1,22 @@
 # arxs
 
-A CLI tool to search and download academic papers across 5 sources: arXiv, Zenodo, SocArXiv, EdArXiv, and OpenAlex. Features built-in rate limiting and caching.
+**Multi-source academic paper search CLI** — search, browse, and download papers from arXiv, Zenodo, SocArXiv, EdArXiv, and OpenAlex in one command.
 
-> Thank you to arXiv for use of its open access interoperability.
+> arXiv paper search · literature review tool · preprint downloader · open-access academic search · research paper CLI · citation lookup · arXiv API client
 
 [中文文档](README_CN.md)
+
+![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go) ![License](https://img.shields.io/badge/license-MIT-green) ![Sources](https://img.shields.io/badge/sources-arXiv%20%7C%20Zenodo%20%7C%20SocArXiv%20%7C%20EdArXiv%20%7C%20OpenAlex-blue)
+
+## Features
+
+- **5 sources**: arXiv, Zenodo, SocArXiv (OSF), EdArXiv (OSF), OpenAlex — routed automatically by subject
+- **Smart dedup**: cross-source deduplication by DOI and title
+- **Citation counts**: fetched from Semantic Scholar for arXiv papers
+- **Offline-friendly**: same-day query cache, no redundant API calls
+- **AI-agent ready**: `--list-subjects`, `--debug`, JSON output schema documented in `--help`
+
+> Thank you to arXiv for use of its open access interoperability.
 
 ## Install
 
@@ -207,16 +219,17 @@ arxs about
 | `--key-title` | `-t` | Search title | — |
 | `--key-abs` | `-b` | Search abstract | — |
 | `--key-author` | `-a` | Search author | — |
-| `--subject` | `-s` | Subject categories | all |
+| `--subject` | `-s` | Subject category (repeatable, OR logic) | arXiv-only |
+| `--list-subjects` | — | Print all valid subject codes and exit | — |
 | `--op` | — | Cross-field operator | `and` |
-| `--from` | — | Start date | none |
-| `--to` | — | End date | none |
-| `--recent` | — | Recent period | — |
-| `--max` | `-m` | Max results | 50 |
-| `--output` | `-o` | Output file | `arxiv-results.json` |
-| `--sort` | — | Sort by | `submitted` |
-| `--order` | — | Sort direction | `desc` |
-| `--no-cache` | — | Skip cache | false |
+| `--from` | — | Start date (YYYY[-MM[-DD]]) | none |
+| `--to` | — | End date (YYYY[-MM[-DD]]) | none |
+| `--recent` | — | Recent period (6m, 12m, 1y, 2y) | — |
+| `--max` | `-m` | Max results per source (1-2000) | 50 |
+| `--output` | `-o` | Output JSON file | `arxiv-results.json` |
+| `--sort` | — | Sort by: submitted, updated, relevance, citations | `submitted` |
+| `--order` | — | Sort direction: asc, desc | `desc` |
+| `--no-cache` | — | Bypass same-day cache | false |
 
 ### list
 
