@@ -1,6 +1,6 @@
 # arxs
 
-arXiv 论文搜索命令行工具。通过 arXiv 官方 API 快速搜索、浏览和下载学术论文。
+多源学术论文搜索命令行工具。同时搜索 arXiv、Zenodo、SocArXiv、EdArXiv 和 OpenAlex 5 个数据源，快速搜索、浏览和下载学术论文。
 
 > Thank you to arXiv for use of its open access interoperability.
 

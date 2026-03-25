@@ -1,6 +1,6 @@
 # arxs
 
-A CLI tool to search and download arXiv papers. Uses the official arXiv API with built-in rate limiting and caching.
+A CLI tool to search and download academic papers across 5 sources: arXiv, Zenodo, SocArXiv, EdArXiv, and OpenAlex. Features built-in rate limiting and caching.
 
 > Thank you to arXiv for use of its open access interoperability.
 

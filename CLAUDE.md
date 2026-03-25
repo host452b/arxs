@@ -25,7 +25,7 @@ go test ./... -race
 ## Adding a New Provider
 1. Create `internal/provider/<name>/provider.go` implementing `Provider` interface
 2. Add test file with 5 test cases (OK, HTTPError, Empty, Timeout, MalformedJSON)
-3. Register in `subject/registry.go` entries
+3. Register in `internal/subject/registry.go` entries
 4. Add to `buildProviders()` map in `cmd/search.go`
 
 ## Debug Logging
