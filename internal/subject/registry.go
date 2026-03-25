@@ -3,6 +3,7 @@ package subject
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/joejiang/arxs/internal/provider"
@@ -160,6 +161,7 @@ func ValidSubjects() []string {
 	for k := range registry {
 		out = append(out, k)
 	}
+	sort.Strings(out)
 	return out
 }
 
