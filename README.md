@@ -104,32 +104,38 @@ Use `--op or` to switch to OR:
 arxs search -t "RLHF" -b "reward model" --op or
 ```
 
-#### Filter by subject
+## Subject Categories (-s)
 
-Use `-s` to filter by arXiv subject category. Multiple categories can be comma-separated.
+`-s` supports arXiv codes and discipline aliases. Multiple `-s` flags use OR logic.
 
-| Value | Subject | Covers |
-|-------|---------|--------|
-| `cs` | Computer Science | cs.AI, cs.CL, cs.CV, cs.LG, ... |
-| `math` | Mathematics | math.AG, math.CO, math.PR, ... |
-| `physics` | Physics | astro-ph, cond-mat, gr-qc, hep-*, nlin, nucl-*, quant-ph, ... |
-| `stat` | Statistics | stat.ML, stat.ME, stat.TH, ... |
-| `eess` | Electrical Engineering & Systems Science | eess.AS, eess.IV, eess.SP, ... |
-| `econ` | Economics | econ.EM, econ.GN, econ.TH |
-| `q-bio` | Quantitative Biology | q-bio.BM, q-bio.GN, q-bio.NC, ... |
-| `q-fin` | Quantitative Finance | q-fin.CP, q-fin.PM, q-fin.RM, ... |
+### Quick Aliases
 
-> No `-s` flag = search all categories.
+| Alias | Domain | Primary Sources |
+|-------|--------|----------------|
+| `cs` | Computer Science | arXiv › Zenodo › SocArXiv |
+| `physics` | All Physics | arXiv › Zenodo |
+| `math` | Mathematics | arXiv › Zenodo |
+| `stat` | Statistics | arXiv › Zenodo |
+| `q-fin` | Quantitative Finance | arXiv › OpenAlex › Zenodo |
+| `econ` | Economics | arXiv › OpenAlex › Zenodo |
+| `q-bio` | Quantitative Biology | arXiv › Zenodo |
+| `eess` | Electrical Engineering | arXiv › Zenodo |
+| `sociology` | Sociology | SocArXiv › OpenAlex › Zenodo |
+| `education` | Education | EdArXiv › SocArXiv › Zenodo |
+| `philosophy` | Philosophy | OpenAlex › SocArXiv › Zenodo |
+| `law` | Law | SocArXiv › OpenAlex › Zenodo |
+| `psychology` | Psychology | SocArXiv › EdArXiv › Zenodo |
+
+### arXiv Codes
+Also accepts any arXiv category code: `cs.AI`, `cs.LG`, `cs.CL`, `hep-th`, `quant-ph`, `math.AG`, etc.
+
+### Examples
 
 ```bash
-# Computer science only
-arxs search -k "LLM" -s cs
-
-# Computer science and statistics
-arxs search -k "machine learning" -s cs,stat
-
-# Physics only
-arxs search -k "black hole" -s physics
+arxs search -k "transformer" -s cs.AI
+arxs search -k "inequality" -s sociology -s law
+arxs search -k "option pricing" -s q-fin --recent 12m
+arxs search -k "curriculum" -s education -s psychology
 ```
 
 #### Filter by date
