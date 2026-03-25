@@ -13,7 +13,7 @@ import (
 const (
 	defaultBaseURL      = "https://export.arxiv.org/api/query"
 	defaultRateInterval = 3 * time.Second
-	UserAgent           = "arxs/1.0 (https://github.com/host452b/arxs)"
+	UserAgent           = "arxs/2.0.1 (https://github.com/host452b/arxs)"
 )
 
 // Client is an arXiv API client with rate limiting and custom User-Agent.

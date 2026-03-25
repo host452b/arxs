@@ -118,6 +118,44 @@ func TestBuildQuerySortOrder(t *testing.T) {
 	}
 }
 
+// TestNormalizeDateEnd verifies that normalizeDateEnd uses the correct last day
+// for each month, not always "31" (C9 fix).
+func TestNormalizeDateEnd(t *testing.T) {
+	tests := []struct {
+		input string
+		want  string
+	}{
+		// YYYY: always ends on Dec 31
+		{"2024", "202412312359"},
+		// YYYYMMDD: just append time
+		{"2024-01-15", "202401152359"},
+		// 31-day months
+		{"2024-01", "202401312359"},
+		{"2024-03", "202403312359"},
+		{"2024-05", "202405312359"},
+		{"2024-07", "202407312359"},
+		{"2024-08", "202408312359"},
+		{"2024-10", "202410312359"},
+		{"2024-12", "202412312359"},
+		// 30-day months
+		{"2024-04", "202404302359"},
+		{"2024-06", "202406302359"},
+		{"2024-09", "202409302359"},
+		{"2024-11", "202411302359"},
+		// February: leap year 2024
+		{"2024-02", "202402292359"},
+		// February: non-leap year 2023
+		{"2023-02", "202302282359"},
+	}
+
+	for _, tt := range tests {
+		got := normalizeDateEnd(tt.input)
+		if got != tt.want {
+			t.Errorf("normalizeDateEnd(%q) = %q, want %q", tt.input, got, tt.want)
+		}
+	}
+}
+
 // helper
 func containsAll(s string, subs ...string) bool {
 	for _, sub := range subs {

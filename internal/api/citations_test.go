@@ -51,6 +51,28 @@ func TestFetchCitations(t *testing.T) {
 	}
 }
 
+// TestFetchCitationsHTTPError verifies that FetchCitations returns an error
+// when the upstream API returns a non-200 status (C3 fix).
+func TestFetchCitationsHTTPError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "rate limited", http.StatusTooManyRequests)
+	}))
+	defer server.Close()
+
+	papers := []model.Paper{
+		{ID: "2401.12345", Title: "Paper A"},
+	}
+	cf := NewCitationFetcher(
+		WithCitationBaseURL(server.URL),
+		WithCitationRateInterval(1*time.Millisecond),
+	)
+
+	err := cf.FetchCitations(papers)
+	if err == nil {
+		t.Fatal("expected error for HTTP 429, got nil")
+	}
+}
+
 func TestFetchCitationsEmpty(t *testing.T) {
 	cf := NewCitationFetcher(WithCitationRateInterval(1 * time.Millisecond))
 	err := cf.FetchCitations(nil)
