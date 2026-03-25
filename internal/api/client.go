@@ -12,7 +12,7 @@ import (
 const (
 	defaultBaseURL      = "https://export.arxiv.org/api/query"
 	defaultRateInterval = 3 * time.Second
-	userAgent           = "arxs/1.0 (https://github.com/joejiang/arxs)"
+	UserAgent           = "arxs/1.0 (https://github.com/joejiang/arxs)"
 )
 
 // Client is an arXiv API client with rate limiting and custom User-Agent.
@@ -63,7 +63,7 @@ func (c *Client) Search(params QueryParams) (*model.SearchResult, error) {
 	if err != nil {
 		return nil, fmt.Errorf("creating request: %w", err)
 	}
-	req.Header.Set("User-Agent", userAgent)
+	req.Header.Set("User-Agent", UserAgent)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -116,7 +116,7 @@ func (c *Client) DownloadFile(url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("User-Agent", userAgent)
+	req.Header.Set("User-Agent", UserAgent)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
