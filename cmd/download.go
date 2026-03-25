@@ -2,15 +2,17 @@ package cmd
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
-	"github.com/joejiang/arxs/internal/api"
 	"github.com/joejiang/arxs/internal/model"
+	"github.com/joejiang/arxs/internal/provider"
 	"github.com/joejiang/arxs/internal/store"
 	"github.com/spf13/cobra"
 )
@@ -61,26 +63,26 @@ func runDownload(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("specify paper numbers or use --all")
 	}
 
-	result, err := store.ReadResults(flagDownloadFile)
+	allPapers, err := loadPapersFromFile(flagDownloadFile)
 	if err != nil {
 		return fmt.Errorf("cannot read %s: %w\nRun 'arxs search' first.", flagDownloadFile, err)
 	}
 
-	if len(result.Papers) == 0 {
+	if len(allPapers) == 0 {
 		return fmt.Errorf("no papers in results file")
 	}
 
 	// Determine which papers to download
 	var indices []int
 	if flagDownloadAll {
-		for i := range result.Papers {
+		for i := range allPapers {
 			indices = append(indices, i)
 		}
 	} else {
 		for _, arg := range args {
 			n, err := strconv.Atoi(arg)
-			if err != nil || n < 1 || n > len(result.Papers) {
-				return fmt.Errorf("invalid paper number: %s (valid range: 1-%d)", arg, len(result.Papers))
+			if err != nil || n < 1 || n > len(allPapers) {
+				return fmt.Errorf("invalid paper number: %s (valid range: 1-%d)", arg, len(allPapers))
 			}
 			indices = append(indices, n-1) // Convert to 0-based
 		}
@@ -104,12 +106,12 @@ func runDownload(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("creating directory: %w", err)
 	}
 
-	client := api.NewClient()
+	provs := buildProviders()
 	var failed []string
 	downloaded := 0
 
 	for _, idx := range indices {
-		paper := result.Papers[idx]
+		paper := allPapers[idx]
 		if flagDownloadAbsOnly {
 			err := saveAbstract(paper)
 			if err != nil {
@@ -117,7 +119,7 @@ func runDownload(cmd *cobra.Command, args []string) error {
 				continue
 			}
 		} else {
-			err := downloadPDF(client, paper)
+			err := downloadPDF(cmd.Context(), provs, paper)
 			if err != nil {
 				failed = append(failed, fmt.Sprintf("#%d %s: %v", idx+1, paper.ID, err))
 				continue
@@ -137,7 +139,20 @@ func runDownload(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func downloadPDF(client *api.Client, paper model.Paper) error {
+func loadPapersFromFile(path string) ([]model.Paper, error) {
+	// Try MultiSourceResult first
+	if multi, err := store.ReadMultiSourceResult(path); err == nil {
+		return multi.AllPapers(), nil
+	}
+	// Fall back to legacy SearchResult
+	result, err := store.ReadResults(path)
+	if err != nil {
+		return nil, err
+	}
+	return result.Papers, nil
+}
+
+func downloadPDF(ctx context.Context, providers map[provider.ProviderID]provider.Provider, paper model.Paper) error {
 	filename := sanitizeFilename(paper.ID) + ".pdf"
 	path := filepath.Join(flagDownloadDir, filename)
 
@@ -149,9 +164,19 @@ func downloadPDF(client *api.Client, paper model.Paper) error {
 	}
 
 	fmt.Printf("downloading: %s ...", filename)
-	data, err := client.DownloadFile(paper.PDFUrl)
+
+	p, ok := providers[provider.ProviderID(paper.Source)]
+	if !ok {
+		// Fall back to arXiv client for unknown sources
+		p = providers[provider.ProviderArxiv]
+	}
+
+	data, err := p.DownloadPDF(ctx, paper)
 	if err != nil {
 		fmt.Println(" FAILED")
+		if paper.PDFUrl == "" {
+			fmt.Printf("      visit: %s\n", paper.SourceURL)
+		}
 		return err
 	}
 
@@ -159,7 +184,6 @@ func downloadPDF(client *api.Client, paper model.Paper) error {
 		fmt.Println(" FAILED")
 		return err
 	}
-
 	fmt.Println(" done")
 	return nil
 }
@@ -175,18 +199,27 @@ func saveAbstract(paper model.Paper) error {
 		}
 	}
 
-	content := fmt.Sprintf("Title: %s\nAuthors: %s\nID: %s\nURL: %s\n\nAbstract:\n%s\n",
+	sourceURL := paper.SourceURL
+	if sourceURL == "" {
+		sourceURL = paper.AbsUrl
+	}
+
+	content := fmt.Sprintf(
+		"Title: %s\nAuthors: %s\nID: %s\nURL: %s\n\nAbstract:\n%s\n\n---\nSource: %s (%s)\nRetrieved via: arxs v%s | %s\n",
 		paper.Title,
 		joinStrings(paper.Authors),
 		paper.ID,
 		paper.AbsUrl,
 		paper.Abstract,
+		paper.Source,
+		sourceURL,
+		version,
+		time.Now().Format("2006-01-02"),
 	)
 
 	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
 		return err
 	}
-
 	fmt.Printf("saved: %s\n", filename)
 	return nil
 }
