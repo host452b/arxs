@@ -124,7 +124,7 @@ func (p *Provider) Search(ctx context.Context, q provider.Query, f provider.Subj
 
 func (p *Provider) DownloadPDF(ctx context.Context, paper model.Paper) ([]byte, error) {
 	if paper.PDFUrl == "" {
-		return nil, fmt.Errorf("%s: no direct PDF URL for %s — visit %s", paper.Source, paper.ID, paper.SourceURL)
+		return nil, fmt.Errorf("socarxiv: no direct PDF URL for %s — visit %s", paper.ID, paper.SourceURL)
 	}
 	if err := p.rateLimiter.Wait(ctx); err != nil {
 		return nil, err
@@ -140,7 +140,7 @@ func (p *Provider) DownloadPDF(ctx context.Context, paper model.Paper) ([]byte, 
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%s: download HTTP %d", paper.Source, resp.StatusCode)
+		return nil, fmt.Errorf("socarxiv: download HTTP %d", resp.StatusCode)
 	}
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
