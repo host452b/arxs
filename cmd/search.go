@@ -10,8 +10,17 @@ import (
 
 	"github.com/joejiang/arxs/internal/api"
 	"github.com/joejiang/arxs/internal/cache"
+	"github.com/joejiang/arxs/internal/log"
 	"github.com/joejiang/arxs/internal/model"
+	"github.com/joejiang/arxs/internal/orchestrator"
+	"github.com/joejiang/arxs/internal/provider"
+	arxivprovider "github.com/joejiang/arxs/internal/provider/arxiv"
+	edarxivprovider "github.com/joejiang/arxs/internal/provider/edarxiv"
+	openalexprovider "github.com/joejiang/arxs/internal/provider/openalex"
+	socarxivprovider "github.com/joejiang/arxs/internal/provider/socarxiv"
+	zenodoprovider "github.com/joejiang/arxs/internal/provider/zenodo"
 	"github.com/joejiang/arxs/internal/store"
+	"github.com/joejiang/arxs/internal/subject"
 	"github.com/spf13/cobra"
 )
 
@@ -46,7 +55,7 @@ Examples:
   arxs search -t "transformer or attention"                   # Title with OR
   arxs search -t "diffusion model" -a "ho and song"           # Title AND author
   arxs search -t "RLHF" -b "reward model" --op or            # Cross-field OR
-  arxs search -k "LLM" -s cs,stat --from 2024-01             # Subject + date
+  arxs search -k "LLM" -s cs.AI -s stat --from 2024-01       # Subject + date
   arxs search -k "quantum computing" --recent 12m            # Recent papers
   arxs search -k "GAN" --max 100 --sort relevance            # More results, by relevance
   arxs search -k "black hole" -s physics -o physics.json     # Custom output file`,
@@ -58,7 +67,7 @@ var (
 	flagTitle     string
 	flagAbs       string
 	flagAuthor    string
-	flagSubjects  string
+	flagSubjects  []string
 	flagOp        string
 	flagFrom      string
 	flagTo        string
@@ -75,7 +84,8 @@ func init() {
 	searchCmd.Flags().StringVarP(&flagTitle, "key-title", "t", "", "Search by title")
 	searchCmd.Flags().StringVarP(&flagAbs, "key-abs", "b", "", "Search by abstract")
 	searchCmd.Flags().StringVarP(&flagAuthor, "key-author", "a", "", "Search by author")
-	searchCmd.Flags().StringVarP(&flagSubjects, "subject", "s", "", "Subject categories (comma-separated: cs,math,physics,...)")
+	searchCmd.Flags().StringArrayVarP(&flagSubjects, "subject", "s", nil,
+		"Subject categories (repeatable, OR): -s cs.AI -s q-fin. Also: -s cs.AI,q-fin")
 	searchCmd.Flags().StringVar(&flagOp, "op", "and", "Operator between -k-* fields: and, or")
 	searchCmd.Flags().StringVar(&flagFrom, "from", "", "Start date (YYYY[-MM[-DD]])")
 	searchCmd.Flags().StringVar(&flagTo, "to", "", "End date (YYYY[-MM[-DD]])")
@@ -90,22 +100,16 @@ func init() {
 }
 
 func runSearch(cmd *cobra.Command, args []string) error {
-	// Validate: at least one search term
 	if flagKey == "" && flagTitle == "" && flagAbs == "" && flagAuthor == "" {
 		return fmt.Errorf("at least one search term is required (-k, -t, -b, or -a)")
 	}
-
-	// Validate: --recent and --from/--to are mutually exclusive
 	if flagRecent != "" && (flagFrom != "" || flagTo != "") {
 		return fmt.Errorf("--recent cannot be used with --from/--to")
 	}
-
-	// Validate: max range
 	if flagMax < 1 || flagMax > 2000 {
 		return fmt.Errorf("--max must be between 1 and 2000")
 	}
 
-	// Parse --recent into from/to
 	from, to := flagFrom, flagTo
 	if flagRecent != "" {
 		var err error
@@ -115,7 +119,6 @@ func runSearch(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Build terms map
 	terms := make(map[string]string)
 	if flagKey != "" {
 		terms["all"] = flagKey
@@ -130,24 +133,145 @@ func runSearch(cmd *cobra.Command, args []string) error {
 		terms["author"] = flagAuthor
 	}
 
-	// Parse subjects
-	var subjects []string
-	if flagSubjects != "" {
-		subjects = strings.Split(flagSubjects, ",")
+	var kwParts []string
+	for _, v := range terms {
+		kwParts = append(kwParts, v)
+	}
+	keywords := strings.Join(kwParts, " ")
+
+	q := provider.Query{
+		Terms: terms, Op: flagOp, Keywords: keywords,
+		From: from, To: to, Max: flagMax,
+		SortBy: flagSort, SortOrder: flagSortOrder,
 	}
 
+	logger := log.FromContext(cmd.Context())
+
+	// If no subjects: arXiv-only (backward compat)
+	if len(flagSubjects) == 0 {
+		return runSearchArxivOnly(cmd, q, from, to, logger)
+	}
+
+	// Subject-based multi-source search
+	lookup, err := subject.Lookup(flagSubjects)
+	if err != nil {
+		return err
+	}
+
+	// Cache key
+	cacheKey := buildMultiCacheKey(flagSubjects, q)
+	if !flagNoCache {
+		cacheDir := filepath.Join(".", ".arxs-cache")
+		c := cache.New(cacheDir)
+		if cached, ok := c.GetMulti(cacheKey); ok {
+			fmt.Fprintf(os.Stderr, "Using cached results from today.\n")
+			return outputMultiResults(cached)
+		}
+	}
+
+	// Build providers in lookup order
+	allProviders := buildProviders()
+	var providers []provider.Provider
+	for _, id := range lookup.Providers {
+		if p, ok := allProviders[id]; ok {
+			providers = append(providers, p)
+		}
+	}
+
+	result, err := orchestrator.Search(cmd.Context(), providers, q, lookup.Filter, logger)
+	if err != nil {
+		return err
+	}
+	result.Query = model.QueryMeta{
+		Terms: terms, Subjects: flagSubjects, Op: flagOp,
+		From: from, To: to, Max: flagMax,
+		SearchedAt: time.Now().UTC().Format(time.RFC3339),
+	}
+
+	// Fetch citation counts for arXiv papers (non-fatal)
+	var arxivPapers []model.Paper
+	for _, g := range result.Groups {
+		if g.Source == "arxiv" {
+			arxivPapers = g.Papers
+		}
+	}
+	if len(arxivPapers) > 0 {
+		fmt.Fprintf(os.Stderr, "Fetching citation counts...\n")
+		cf := api.NewCitationFetcher()
+		_ = cf.FetchCitations(arxivPapers)
+	}
+
+	if !flagNoCache {
+		cacheDir := filepath.Join(".", ".arxs-cache")
+		c := cache.New(cacheDir)
+		_ = c.SetMulti(cacheKey, result)
+	}
+
+	if err := store.WriteMultiSourceResult(flagOutput, result); err != nil {
+		return fmt.Errorf("writing results: %w", err)
+	}
+
+	return outputMultiResults(result)
+}
+
+func buildMultiCacheKey(subjects []string, q provider.Query) string {
+	return fmt.Sprintf("%v|%s|%s|%s|%d", subjects, q.Keywords, q.From, q.To, q.Max)
+}
+
+// buildProviders constructs a map of all available providers.
+func buildProviders() map[provider.ProviderID]provider.Provider {
+	return map[provider.ProviderID]provider.Provider{
+		provider.ProviderArxiv:    arxivprovider.New(),
+		provider.ProviderZenodo:   zenodoprovider.New(),
+		provider.ProviderSocArxiv: socarxivprovider.New(),
+		provider.ProviderEdArxiv:  edarxivprovider.New(),
+		provider.ProviderOpenAlex: openalexprovider.New(),
+	}
+}
+
+func outputMultiResults(result *model.MultiSourceResult) error {
+	totalSources := len(result.Groups)
+	fmt.Printf("Found %d papers across %d sources (after dedup), saved to %s\n\n",
+		result.Total, totalSources, flagOutput)
+
+	if result.Total == 0 {
+		fmt.Println("No results. Try broadening your search terms or removing -s filters.")
+		return nil
+	}
+
+	globalIdx := 1
+	for _, g := range result.Groups {
+		fmt.Printf("[%s — %d papers]\n", g.Source, g.Count)
+		fmt.Printf(" %-4s %-12s %-10s %-7s %s\n", "#", "Published", "Category", "Cited", "Title")
+		for _, p := range g.Papers {
+			published := p.Published
+			if len(published) >= 10 {
+				published = published[:10]
+			}
+			cat := p.Source
+			if len(p.Categories) > 0 {
+				cat = p.Categories[0]
+			}
+			cited := "-"
+			if p.Citations > 0 {
+				cited = fmt.Sprintf("%d", p.Citations)
+			}
+			fmt.Printf(" %-4d %-12s %-10s %-7s %s\n", globalIdx, published, cat, cited, p.Title)
+			globalIdx++
+		}
+		fmt.Println()
+	}
+	return nil
+}
+
+// runSearchArxivOnly handles the no-subjects case using the original arXiv-only flow.
+func runSearchArxivOnly(cmd *cobra.Command, q provider.Query, from, to string, logger *log.Logger) error {
 	params := api.QueryParams{
-		Terms:     terms,
-		Subjects:  subjects,
-		Op:        flagOp,
-		From:      from,
-		To:        to,
-		Max:       flagMax,
-		SortBy:    flagSort,
-		SortOrder: flagSortOrder,
+		Terms: q.Terms, Subjects: nil, Op: q.Op,
+		From: from, To: to, Max: q.Max,
+		SortBy: q.SortBy, SortOrder: q.SortOrder,
 	}
 
-	// Check cache
 	var c *cache.Cache
 	if !flagNoCache {
 		cacheDir := filepath.Join(".", ".arxs-cache")
@@ -159,30 +283,25 @@ func runSearch(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Search
 	client := api.NewClient()
 	result, err := client.Search(params)
 	if err != nil {
 		return err
 	}
 
-	// Fetch citation counts from Semantic Scholar
 	if len(result.Papers) > 0 {
 		fmt.Fprintf(os.Stderr, "Fetching citation counts...\n")
 		cf := api.NewCitationFetcher()
-		_ = cf.FetchCitations(result.Papers) // Non-fatal if it fails
+		_ = cf.FetchCitations(result.Papers)
 	}
 
-	// Update query metadata
 	result.Query.From = from
 	result.Query.To = to
 
-	// Sort by citations if requested
 	if flagSort == "citations" {
 		sortByCitations(result.Papers)
 	}
 
-	// Cache result
 	if c != nil {
 		cacheKey := api.BuildQueryURL(params)
 		_ = c.Set(cacheKey, result)
