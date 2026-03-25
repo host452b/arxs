@@ -33,15 +33,17 @@ func (rl *RateLimiter) Wait(ctx context.Context) error {
 		rl.mu.Unlock()
 		return nil
 	}
+	// Reserve this slot before releasing the lock.  If we unlocked first,
+	// a concurrent goroutine would read the same lastCall and compute the
+	// same remaining — both would then wake at the same time, violating
+	// the rate limit.
+	rl.lastCall = rl.lastCall.Add(rl.interval)
 	remaining := rl.interval - elapsed
 	rl.mu.Unlock()
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
 	case <-time.After(remaining):
-		rl.mu.Lock()
-		rl.lastCall = time.Now()
-		rl.mu.Unlock()
 		return nil
 	}
 }

@@ -86,13 +86,12 @@ func (cf *CitationFetcher) FetchCitations(papers []model.Paper) error {
 		}
 
 		if err := cf.rateLimiter.Wait(context.Background()); err != nil {
-			return nil
+			return err
 		}
 
 		results, err := cf.fetchBatch(ids)
 		if err != nil {
-			// Non-fatal: citation fetch failure shouldn't block search
-			return nil
+			return err
 		}
 
 		// Match results back to papers by position (batch API preserves order)

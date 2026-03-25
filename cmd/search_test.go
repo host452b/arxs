@@ -36,6 +36,27 @@ func TestParseRecent(t *testing.T) {
 	}
 }
 
+// TestBuildKeywordsDeterministic verifies that buildKeywords produces the
+// same output regardless of map iteration order (C10 fix).
+func TestBuildKeywordsDeterministic(t *testing.T) {
+	terms := map[string]string{
+		"all":    "deep learning",
+		"title":  "transformer",
+		"abs":    "attention",
+		"author": "vaswani",
+	}
+	first := buildKeywords(terms)
+	if first == "" {
+		t.Fatal("buildKeywords returned empty string")
+	}
+	for i := 0; i < 200; i++ {
+		got := buildKeywords(terms)
+		if got != first {
+			t.Fatalf("buildKeywords not deterministic on iteration %d: got %q, want %q", i, got, first)
+		}
+	}
+}
+
 func TestSearchValidation(t *testing.T) {
 	// No search terms
 	rootCmd.SetArgs([]string{"search"})

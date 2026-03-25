@@ -198,11 +198,7 @@ func runSearch(cmd *cobra.Command, args []string) error {
 		terms["author"] = flagAuthor
 	}
 
-	var kwParts []string
-	for _, v := range terms {
-		kwParts = append(kwParts, v)
-	}
-	keywords := strings.Join(kwParts, " ")
+	keywords := buildKeywords(terms)
 
 	q := provider.Query{
 		Terms: terms, Op: flagOp, Keywords: keywords,
@@ -263,7 +259,9 @@ func runSearch(cmd *cobra.Command, args []string) error {
 	if len(arxivPapers) > 0 {
 		fmt.Fprintf(os.Stderr, "Fetching citation counts...\n")
 		cf := api.NewCitationFetcher()
-		_ = cf.FetchCitations(arxivPapers)
+		if err := cf.FetchCitations(arxivPapers); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: citation fetch failed: %v\n", err)
+		}
 	}
 
 	if !flagNoCache {
@@ -357,7 +355,9 @@ func runSearchArxivOnly(cmd *cobra.Command, q provider.Query, from, to string, l
 	if len(result.Papers) > 0 {
 		fmt.Fprintf(os.Stderr, "Fetching citation counts...\n")
 		cf := api.NewCitationFetcher()
-		_ = cf.FetchCitations(result.Papers)
+		if err := cf.FetchCitations(result.Papers); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: citation fetch failed: %v\n", err)
+		}
 	}
 
 	result.Query.From = from
@@ -419,6 +419,21 @@ func sortByCitations(papers []model.Paper) {
 	sort.Slice(papers, func(i, j int) bool {
 		return papers[i].Citations > papers[j].Citations
 	})
+}
+
+// buildKeywords combines search term values in a deterministic order.
+// Map iteration in Go is non-deterministic, so we sort by key first.
+func buildKeywords(terms map[string]string) string {
+	keys := make([]string, 0, len(terms))
+	for k := range terms {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	parts := make([]string, 0, len(terms))
+	for _, k := range keys {
+		parts = append(parts, terms[k])
+	}
+	return strings.Join(parts, " ")
 }
 
 func parseRecent(s string) (string, string, error) {

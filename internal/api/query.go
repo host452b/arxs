@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"net/url"
 	"sort"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/host452b/arxs/internal/parser"
 )
@@ -170,14 +172,22 @@ func normalizeDateStart(d string) string {
 	return d
 }
 
-// normalizeDateEnd converts "2024" → "202412312359", "2024-01" → "202401312359", "2024-01-15" → "202401152359"
+// normalizeDateEnd converts "2024" → "202412312359", "2024-06" → "202406302359", "2024-01-15" → "202401152359".
+// For YYYYMM, it computes the actual last day of the month (handling leap years).
 func normalizeDateEnd(d string) string {
 	d = strings.ReplaceAll(d, "-", "")
 	switch len(d) {
 	case 4: // YYYY
 		return d + "12312359"
-	case 6: // YYYYMM
-		return d + "312359" // Simplified: use 31 for all months
+	case 6: // YYYYMM — compute correct last day
+		year, errY := strconv.Atoi(d[:4])
+		month, errM := strconv.Atoi(d[4:6])
+		if errY != nil || errM != nil || month < 1 || month > 12 {
+			return d + "312359" // fallback
+		}
+		// time.Date with day=0 rolls back to the last day of the previous month
+		lastDay := time.Date(year, time.Month(month)+1, 0, 0, 0, 0, 0, time.UTC).Day()
+		return fmt.Sprintf("%s%02d2359", d, lastDay)
 	case 8: // YYYYMMDD
 		return d + "2359"
 	}
