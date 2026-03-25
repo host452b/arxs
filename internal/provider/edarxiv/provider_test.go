@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/joejiang/arxs/internal/provider"
-	edarxivprovider "github.com/joejiang/arxs/internal/provider/edarxiv"
+	"github.com/host452b/arxs/internal/provider"
+	edarxivprovider "github.com/host452b/arxs/internal/provider/edarxiv"
 )
 
 func sampleOSFResponse() []byte {

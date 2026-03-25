@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/joejiang/arxs/internal/provider"
+	"github.com/host452b/arxs/internal/provider"
 )
 
 // LookupResult holds the ordered provider list and merged filters for a set of subjects.

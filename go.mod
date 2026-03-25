@@ -1,4 +1,4 @@
-module github.com/joejiang/arxs
+module github.com/host452b/arxs
 
 go 1.26.1
 

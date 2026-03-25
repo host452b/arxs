@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/joejiang/arxs/internal/model"
+	"github.com/host452b/arxs/internal/model"
 )
 
 // WriteResults writes search results to a JSON file.
