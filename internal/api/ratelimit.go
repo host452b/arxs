@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"sync"
 	"time"
 )
@@ -18,15 +19,29 @@ func NewRateLimiter(interval time.Duration) *RateLimiter {
 }
 
 // Wait blocks until the minimum interval has elapsed since the last call.
-func (rl *RateLimiter) Wait() {
+// It returns early with ctx.Err() if the context is cancelled while waiting.
+func (rl *RateLimiter) Wait(ctx context.Context) error {
 	rl.mu.Lock()
-	defer rl.mu.Unlock()
-
-	if !rl.lastCall.IsZero() {
-		elapsed := time.Since(rl.lastCall)
-		if elapsed < rl.interval {
-			time.Sleep(rl.interval - elapsed)
-		}
+	if rl.interval == 0 || rl.lastCall.IsZero() {
+		rl.lastCall = time.Now()
+		rl.mu.Unlock()
+		return nil
 	}
-	rl.lastCall = time.Now()
+	elapsed := time.Since(rl.lastCall)
+	if elapsed >= rl.interval {
+		rl.lastCall = time.Now()
+		rl.mu.Unlock()
+		return nil
+	}
+	remaining := rl.interval - elapsed
+	rl.mu.Unlock()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-time.After(remaining):
+		rl.mu.Lock()
+		rl.lastCall = time.Now()
+		rl.mu.Unlock()
+		return nil
+	}
 }

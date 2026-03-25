@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -84,7 +85,9 @@ func (cf *CitationFetcher) FetchCitations(papers []model.Paper) error {
 			ids[i] = "ARXIV:" + p.ID
 		}
 
-		cf.rateLimiter.Wait()
+		if err := cf.rateLimiter.Wait(context.Background()); err != nil {
+			return nil
+		}
 
 		results, err := cf.fetchBatch(ids)
 		if err != nil {

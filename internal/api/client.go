@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -50,7 +51,9 @@ func NewClient(opts ...Option) *Client {
 
 // Search executes a search query and returns parsed results.
 func (c *Client) Search(params QueryParams) (*model.SearchResult, error) {
-	c.rateLimiter.Wait()
+	if err := c.rateLimiter.Wait(context.Background()); err != nil {
+		return nil, err
+	}
 
 	queryURL := BuildQueryURL(params)
 
@@ -110,7 +113,9 @@ func (c *Client) Search(params QueryParams) (*model.SearchResult, error) {
 
 // DownloadFile downloads a file from the given URL and returns its content.
 func (c *Client) DownloadFile(url string) ([]byte, error) {
-	c.rateLimiter.Wait()
+	if err := c.rateLimiter.Wait(context.Background()); err != nil {
+		return nil, err
+	}
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
