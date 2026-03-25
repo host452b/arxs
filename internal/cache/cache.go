@@ -83,3 +83,44 @@ func (c *Cache) path(key string) string {
 func today() string {
 	return time.Now().UTC().Format("2006-01-02")
 }
+
+type multiCacheEntry struct {
+	Date   string                  `json:"date"`
+	Result model.MultiSourceResult `json:"result"`
+}
+
+// GetMulti retrieves a cached MultiSourceResult.
+func (c *Cache) GetMulti(key string) (*model.MultiSourceResult, bool) {
+	if c == nil {
+		return nil, false
+	}
+	path := c.path("multi_" + key)
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, false
+	}
+	var entry multiCacheEntry
+	if err := json.Unmarshal(data, &entry); err != nil {
+		return nil, false
+	}
+	if entry.Date != today() {
+		return nil, false
+	}
+	return &entry.Result, true
+}
+
+// SetMulti caches a MultiSourceResult.
+func (c *Cache) SetMulti(key string, result *model.MultiSourceResult) error {
+	if c == nil {
+		return nil
+	}
+	if err := os.MkdirAll(c.dir, 0755); err != nil {
+		return err
+	}
+	entry := multiCacheEntry{Date: today(), Result: *result}
+	data, err := json.Marshal(entry)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(c.path("multi_"+key), data, 0644)
+}
