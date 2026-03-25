@@ -104,32 +104,38 @@ arxs search -t "diffusion model" -a "ho and song"
 arxs search -t "RLHF" -b "reward model" --op or
 ```
 
-#### 按学科分类筛选
+## 学科分类 (-s)
 
-使用 `-s` 按 arXiv 学科分类过滤，多个分类用逗号分隔。
+`-s` 支持 arXiv 代码和学科别名。多个 `-s` 参数使用 OR 逻辑（或关系）。
 
-| 参数值 | 学科 | 覆盖范围 |
-|--------|------|----------|
-| `cs` | 计算机科学 | cs.AI, cs.CL, cs.CV, cs.LG, ... |
-| `math` | 数学 | math.AG, math.CO, math.PR, ... |
-| `physics` | 物理学 | astro-ph, cond-mat, gr-qc, hep-*, nlin, nucl-*, quant-ph, ... |
-| `stat` | 统计学 | stat.ML, stat.ME, stat.TH, ... |
-| `eess` | 电气工程与系统科学 | eess.AS, eess.IV, eess.SP, ... |
-| `econ` | 经济学 | econ.EM, econ.GN, econ.TH |
-| `q-bio` | 定量生物学 | q-bio.BM, q-bio.GN, q-bio.NC, ... |
-| `q-fin` | 定量金融 | q-fin.CP, q-fin.PM, q-fin.RM, ... |
+### 快速别名
 
-> 不加 `-s` 参数 = 搜索所有分类。
+| 别名 | 学科 | 主要数据源 |
+|------|------|-----------|
+| `cs` | 计算机科学 | arXiv › Zenodo › SocArXiv |
+| `physics` | 物理学 | arXiv › Zenodo |
+| `math` | 数学 | arXiv › Zenodo |
+| `stat` | 统计学 | arXiv › Zenodo |
+| `q-fin` | 定量金融 | arXiv › OpenAlex › Zenodo |
+| `econ` | 经济学 | arXiv › OpenAlex › Zenodo |
+| `q-bio` | 定量生物学 | arXiv › Zenodo |
+| `eess` | 电气工程 | arXiv › Zenodo |
+| `sociology` | 社会学 | SocArXiv › OpenAlex › Zenodo |
+| `education` | 教育学 | EdArXiv › SocArXiv › Zenodo |
+| `philosophy` | 哲学 | OpenAlex › SocArXiv › Zenodo |
+| `law` | 法学 | SocArXiv › OpenAlex › Zenodo |
+| `psychology` | 心理学 | SocArXiv › EdArXiv › Zenodo |
+
+### arXiv 分类代码
+也支持任何 arXiv 分类代码：`cs.AI`、`cs.LG`、`cs.CL`、`hep-th`、`quant-ph`、`math.AG` 等。
+
+### 示例
 
 ```bash
-# 只搜索计算机科学
-arxs search -k "LLM" -s cs
-
-# 搜索计算机科学和统计学
-arxs search -k "machine learning" -s cs,stat
-
-# 只搜索物理学
-arxs search -k "black hole" -s physics
+arxs search -k "transformer" -s cs.AI
+arxs search -k "inequality" -s sociology -s law
+arxs search -k "option pricing" -s q-fin --recent 12m
+arxs search -k "curriculum" -s education -s psychology
 ```
 
 #### 按日期筛选
