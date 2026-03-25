@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html"
 	"io"
 	"net/http"
 	"net/url"
@@ -131,17 +132,21 @@ func (p *Provider) Search(ctx context.Context, q provider.Query, f provider.Subj
 				break
 			}
 		}
+		pageURL := h.Links.HTML
+		if pageURL == "" {
+			pageURL = fmt.Sprintf("https://zenodo.org/records/%d", h.ID)
+		}
 		papers = append(papers, model.Paper{
 			ID:        fmt.Sprintf("zenodo.%d", h.ID),
 			Title:     h.Metadata.Title,
 			Authors:   authors,
-			Abstract:  h.Metadata.Description,
+			Abstract:  stripHTML(h.Metadata.Description),
 			Published: h.Metadata.PublicationDate,
 			DOI:       h.DOI,
 			PDFUrl:    pdfURL,
-			AbsUrl:    h.Links.HTML,
+			AbsUrl:    pageURL,
 			Source:    "zenodo",
-			SourceURL: h.Links.HTML,
+			SourceURL: pageURL,
 		})
 	}
 	return papers, nil
@@ -172,4 +177,24 @@ func (p *Provider) DownloadPDF(ctx context.Context, paper model.Paper) ([]byte, 
 		return nil, fmt.Errorf("zenodo: reading download body: %w", err)
 	}
 	return data, nil
+}
+
+// stripHTML removes HTML tags and decodes HTML entities from s.
+// Zenodo descriptions often contain HTML markup (e.g. <p>, <em>, <br>).
+func stripHTML(s string) string {
+	var b strings.Builder
+	inTag := false
+	for _, r := range s {
+		switch {
+		case r == '<':
+			inTag = true
+			b.WriteRune(' ') // replace opening tag with a space separator
+		case r == '>':
+			inTag = false
+		case !inTag:
+			b.WriteRune(r)
+		}
+	}
+	// Collapse extra whitespace and decode HTML entities (e.g. &amp; &quot;)
+	return strings.TrimSpace(html.UnescapeString(strings.Join(strings.Fields(b.String()), " ")))
 }
