@@ -79,7 +79,7 @@ OUTPUT:
 WORKFLOW:
   1. arxs search -k "your query"             arXiv-only search
   2. arxs search -k "query" -s cs.AI         Multi-source by subject
-  3. arxs list                               Browse results (grouped by source)
+  3. arxs list                               Browse results as numbered flat list
   4. arxs list --verbose                     With full abstracts
   5. arxs download 1 3 5                     Download PDFs by result number
   6. arxs download --abs-only 2              Save abstract as .txt
