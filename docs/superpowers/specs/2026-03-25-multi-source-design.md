@@ -161,7 +161,7 @@ type Provider interface {
 | `quant-ph` | arxiv › zenodo | `quant-ph` | C62520636 | "quantum computing" | — |
 | `math` | arxiv › zenodo | `math.*` | C33923547 | "mathematics" | — |
 | `stat` | arxiv › zenodo | `stat.*` | C161191863 | "statistics" | — |
-| `q-fin` | arxiv › openalex › zenodo | `q-fin.*` | C162324750 | "quantitative finance" | — |
+| `q-fin` | arxiv › openalex › zenodo | `q-fin.*` | C187279774 | "quantitative finance" | — |
 | `econ` | arxiv › openalex › zenodo | `econ.*` | C162324750 | "economics" | — |
 | `q-bio` | arxiv › zenodo | `q-bio.*` | C86803240 | "quantitative biology" | — |
 | `eess` | arxiv › zenodo | `eess.*` | C41008148 | "electrical engineering" | — |
@@ -217,6 +217,18 @@ func Search(
    - 按主源顺序遍历：主源条目入 seen；次源命中 seen → 丢弃
 6. 返回 `MultiSourceResult`
 
+**部分失败策略**：
+- 若至少一个 provider 成功，返回部分结果（`MultiSourceResult`）+ `nil` error；各 provider 错误仅写入日志（`provider_error`）
+- 若所有 provider 均返回 error，返回 `nil, errors.Join(err1, err2, ...)`，CLI 层打印错误并退出非零状态
+
+**未知 `-s` 输入处理**：
+- `subject.Lookup()` 对无法识别的 subject 返回 `ErrUnknownSubject`，CLI 在发起任何 HTTP 请求前打印错误和有效别名列表，退出非零状态：
+  ```
+  error: unknown subject "astrophysics"
+  valid aliases: cs, physics, math, stat, q-fin, econ, q-bio, eess, sociology, education, philosophy, law, psychology, ...
+  arXiv codes: cs.AI, cs.LG, cs.CL, cs.CV, hep-th, quant-ph, ...
+  ```
+
 ---
 
 ## AI 日志可观测性（`internal/log/`）
@@ -247,7 +259,40 @@ func Search(
 searchCmd.Flags().StringArrayVarP(&flagSubjects, "subject", "s", nil, "Subject (repeatable, OR): -s cs.AI -s q-fin")
 ```
 
-兼容旧逗号写法：`-s cs.AI,cs.LG` 自动拆分。
+**逗号兼容**：每个 StringArray 元素在 `subject.Lookup()` 前先按逗号拆分，支持混合写法：
+- `-s cs.AI -s q-fin` → `["cs.AI", "q-fin"]`
+- `-s cs.AI,cs.LG` → `["cs.AI", "cs.LG"]`
+- `-s cs.AI,cs.LG -s q-fin` → `["cs.AI", "cs.LG", "q-fin"]`
+
+### `--debug` 日志开关
+
+`--debug` 注册为 `rootCmd` 的 persistent flag，全局生效：
+```go
+// cmd/root.go
+var flagDebug bool
+rootCmd.PersistentFlags().BoolVar(&flagDebug, "debug", false, "Enable structured JSON debug logging to stderr")
+```
+
+Logger 在 `cmd/root.go` 的 `PersistentPreRun` 中构建，存入 `context` 传递给 orchestrator：
+```go
+rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+    logger := log.New(flagDebug)
+    cmd.SetContext(log.WithLogger(cmd.Context(), logger))
+    return nil
+}
+```
+
+### `download` 命令变更
+
+**store 扩展**：新增 `WriteMultiSourceResult`/`ReadMultiSourceResult`（返回 `*model.MultiSourceResult`），旧 `WriteResults`/`ReadResults` 保留（arXiv-only 单源结果向后兼容）。`download` 命令优先尝试 `ReadMultiSourceResult`，失败后 fallback 到 `ReadResults` 并将 papers 包装为单组。
+
+**全局序号**：`download 1 3 5` 中的序号按输出表格的全局 `#` 列映射（跨分组连续编号），与终端展示一致。
+
+**非 arXiv PDF 下载**：`runDownload` 根据 `paper.Source` 分发到对应 Provider 的 `DownloadPDF`；若 `paper.PDFUrl` 为空（如 OpenAlex 仅有 landing page），打印警告并输出 `paper.SourceURL` 供用户手动访问：
+```
+warn: #74 openalex/W2741809807 has no direct PDF link
+      visit: https://doi.org/10.1016/j.econ.2025.01.003
+```
 
 ### 终端输出（分组）
 
