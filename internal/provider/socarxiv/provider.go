@@ -56,6 +56,25 @@ type osfResponse struct {
 		Links struct {
 			HTML string `json:"html"`
 		} `json:"links"`
+		Embeds struct {
+			Contributors struct {
+				Data []struct {
+					Attributes struct {
+						Bibliographic           bool    `json:"bibliographic"`
+						UnregisteredContributor *string `json:"unregistered_contributor"`
+					} `json:"attributes"`
+					Embeds struct {
+						Users struct {
+							Data struct {
+								Attributes struct {
+									FullName string `json:"full_name"`
+								} `json:"attributes"`
+							} `json:"data"`
+						} `json:"users"`
+					} `json:"embeds"`
+				} `json:"data"`
+			} `json:"contributors"`
+		} `json:"embeds"`
 	} `json:"data"`
 }
 
@@ -70,6 +89,7 @@ func (p *Provider) Search(ctx context.Context, q provider.Query, f provider.Subj
 		params.Set("filter[title]", q.Keywords)
 	}
 	params.Set("page[size]", fmt.Sprintf("%d", q.Max))
+	params.Set("embed", "contributors")
 
 	reqURL := p.baseURL + "/preprints/?" + params.Encode()
 	req, err := http.NewRequestWithContext(ctx, "GET", reqURL, nil)
@@ -108,9 +128,25 @@ func (p *Provider) Search(ctx context.Context, q provider.Query, f provider.Subj
 		if pageURL == "" {
 			pageURL = "https://osf.io/preprints/" + providerID + "/" + d.ID
 		}
+		var authors []string
+		for _, c := range d.Embeds.Contributors.Data {
+			if !c.Attributes.Bibliographic {
+				continue
+			}
+			name := ""
+			if c.Attributes.UnregisteredContributor != nil && *c.Attributes.UnregisteredContributor != "" {
+				name = *c.Attributes.UnregisteredContributor
+			} else {
+				name = c.Embeds.Users.Data.Attributes.FullName
+			}
+			if name != "" {
+				authors = append(authors, name)
+			}
+		}
 		papers = append(papers, model.Paper{
 			ID:        providerID + "." + d.ID,
 			Title:     d.Attributes.Title,
+			Authors:   authors,
 			Abstract:  d.Attributes.Description,
 			Published: published,
 			DOI:       d.Attributes.DOI,

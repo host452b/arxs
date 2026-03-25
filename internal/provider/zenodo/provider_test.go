@@ -67,6 +67,108 @@ func TestZenodoProvider_Search_OK(t *testing.T) {
 	}
 }
 
+// TestZenodoProvider_HTMLAbstract verifies that HTML tags are stripped from
+// Zenodo's description field before being stored as Abstract.
+func TestZenodoProvider_HTMLAbstract(t *testing.T) {
+	resp := map[string]any{
+		"hits": map[string]any{
+			"total": 1,
+			"hits": []map[string]any{
+				{
+					"id":  99999,
+					"doi": "10.5281/zenodo.99999",
+					"metadata": map[string]any{
+						"title":            "Test Paper",
+						"creators":         []map[string]any{{"name": "Doe, Jane"}},
+						"description":      "<p>First paragraph.</p><p>Second paragraph with <em>emphasis</em>.</p>",
+						"publication_date": "2024-06-01",
+					},
+					"links": map[string]any{"html": "https://zenodo.org/record/99999"},
+					"files": []any{},
+				},
+			},
+		},
+	}
+	data, _ := json.Marshal(resp)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write(data)
+	}))
+	defer srv.Close()
+
+	p := zenodoprovider.New(zenodoprovider.WithBaseURL(srv.URL), zenodoprovider.WithRateInterval(0))
+	papers, err := p.Search(context.Background(), provider.Query{Keywords: "test", Max: 1}, provider.SubjectFilter{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(papers) != 1 {
+		t.Fatalf("expected 1 paper, got %d", len(papers))
+	}
+	abstract := papers[0].Abstract
+	if containsHTML(abstract) {
+		t.Errorf("Abstract still contains HTML tags: %q", abstract)
+	}
+	if abstract == "" {
+		t.Error("Abstract is empty after stripping — should have text content")
+	}
+}
+
+// TestZenodoProvider_URLFallback verifies that when links.html is empty,
+// the provider constructs the URL from the record ID.
+func TestZenodoProvider_URLFallback(t *testing.T) {
+	resp := map[string]any{
+		"hits": map[string]any{
+			"total": 1,
+			"hits": []map[string]any{
+				{
+					"id":  55555,
+					"doi": "10.5281/zenodo.55555",
+					"metadata": map[string]any{
+						"title":            "No Link Record",
+						"creators":         []map[string]any{{"name": "Author, A"}},
+						"description":      "Abstract text.",
+						"publication_date": "2024-01-01",
+					},
+					"links": map[string]any{"html": ""}, // empty — should fall back to ID-based URL
+					"files": []any{},
+				},
+			},
+		},
+	}
+	data, _ := json.Marshal(resp)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write(data)
+	}))
+	defer srv.Close()
+
+	p := zenodoprovider.New(zenodoprovider.WithBaseURL(srv.URL), zenodoprovider.WithRateInterval(0))
+	papers, err := p.Search(context.Background(), provider.Query{Keywords: "test", Max: 1}, provider.SubjectFilter{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(papers) != 1 {
+		t.Fatalf("expected 1 paper, got %d", len(papers))
+	}
+	if papers[0].SourceURL == "" {
+		t.Error("SourceURL is empty — should fall back to https://zenodo.org/records/{id}")
+	}
+	if papers[0].AbsUrl == "" {
+		t.Error("AbsUrl is empty — should fall back to https://zenodo.org/records/{id}")
+	}
+}
+
+func containsHTML(s string) bool {
+	for i := 0; i < len(s)-1; i++ {
+		if s[i] == '<' {
+			for j := i + 1; j < len(s); j++ {
+				if s[j] == '>' {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
 func TestZenodoProvider_Search_HTTPError(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad request", 400)

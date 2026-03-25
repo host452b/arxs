@@ -55,6 +55,67 @@ func TestEdArxivProvider_Search_OK(t *testing.T) {
 	}
 }
 
+func TestEdArxivProvider_AuthorsParsed(t *testing.T) {
+	resp := map[string]any{
+		"data": []map[string]any{
+			{
+				"id":   "edu55",
+				"type": "preprints",
+				"attributes": map[string]any{
+					"title":          "EdArXiv Paper With Authors",
+					"description":    "An education paper.",
+					"date_published": "2025-01-10T00:00:00Z",
+					"doi":            "10.35542/osf.io/edu55",
+				},
+				"links": map[string]any{"html": "https://osf.io/preprints/edarxiv/edu55"},
+				"embeds": map[string]any{
+					"contributors": map[string]any{
+						"data": []map[string]any{
+							{
+								"id": "edu55-u1",
+								"attributes": map[string]any{
+									"bibliographic":           true,
+									"unregistered_contributor": nil,
+								},
+								"embeds": map[string]any{
+									"users": map[string]any{
+										"data": map[string]any{
+											"id":         "u1",
+											"attributes": map[string]any{"full_name": "Carol Teacher"},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"links": map[string]any{"next": nil},
+	}
+	data, _ := json.Marshal(resp)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("embed") != "contributors" {
+			t.Errorf("missing embed=contributors param, got: %q", r.URL.RawQuery)
+		}
+		w.Header().Set("Content-Type", "application/vnd.api+json")
+		w.Write(data)
+	}))
+	defer srv.Close()
+
+	p := edarxivprovider.New(edarxivprovider.WithBaseURL(srv.URL), edarxivprovider.WithRateInterval(0))
+	papers, err := p.Search(context.Background(), provider.Query{Keywords: "education", Max: 5}, provider.SubjectFilter{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(papers) != 1 {
+		t.Fatalf("expected 1 paper, got %d", len(papers))
+	}
+	if len(papers[0].Authors) != 1 || papers[0].Authors[0] != "Carol Teacher" {
+		t.Errorf("authors = %v, want [Carol Teacher]", papers[0].Authors)
+	}
+}
+
 func TestEdArxivProvider_Search_HTTPError(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "forbidden", 403)
