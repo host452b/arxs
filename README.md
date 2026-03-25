@@ -20,30 +20,76 @@
 
 ## Install
 
-**One-liner (macOS / Linux):**
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/host452b/arxs/main/install.sh | sh
-```
-
-**Windows (PowerShell):**
-
-```powershell
-irm https://raw.githubusercontent.com/host452b/arxs/main/install.ps1 | iex
-```
-
-**Go install:**
+### Option 1 — Go install (recommended if you have Go ≥ 1.21)
 
 ```bash
 go install github.com/host452b/arxs@latest
 ```
 
-**Build from source:**
+`arxs` is installed to `$(go env GOPATH)/bin`. Make sure that directory is in your `$PATH`:
 
 ```bash
+# Add to ~/.bashrc or ~/.zshrc if not already present:
+export PATH="$PATH:$(go env GOPATH)/bin"
+```
+
+Verify:
+
+```bash
+arxs --version   # arxs v2.0.2
+```
+
+### Option 2 — Shell script (macOS / Linux, no Go required)
+
+Downloads the pre-built binary for your platform:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/host452b/arxs/main/install.sh | sh
+```
+
+The script installs to `/usr/local/bin/arxs` (requires sudo on some systems). To install to a custom directory:
+
+```bash
+INSTALL_DIR=~/.local/bin curl -fsSL https://raw.githubusercontent.com/host452b/arxs/main/install.sh | sh
+```
+
+### Option 3 — Windows (PowerShell)
+
+```powershell
+irm https://raw.githubusercontent.com/host452b/arxs/main/install.ps1 | iex
+```
+
+Installs to `%USERPROFILE%\AppData\Local\Microsoft\WindowsApps`. Open a new terminal after installation.
+
+### Option 4 — Build from source
+
+```bash
+# Requires Go 1.21+
 git clone https://github.com/host452b/arxs.git
 cd arxs
-go build -o arxs .
+go build -o arxs .          # Linux/macOS
+go build -o arxs.exe .      # Windows
+```
+
+Move the binary to a directory in your `$PATH`:
+
+```bash
+mv arxs /usr/local/bin/     # or: ~/.local/bin/, ~/bin/, etc.
+```
+
+### Option 5 — Pin a specific version
+
+```bash
+go install github.com/host452b/arxs@v2.0.2
+```
+
+### Verify installation
+
+```bash
+arxs --version        # shows version
+arxs --help           # shows full usage
+arxs search --help    # search-specific flags and examples
+arxs search --list-subjects   # list all 53 valid subject codes
 ```
 
 ## Quick Start

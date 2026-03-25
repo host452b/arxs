@@ -8,30 +8,66 @@
 
 ## 安装
 
-**一键安装（macOS / Linux）：**
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/host452b/arxs/main/install.sh | sh
-```
-
-**Windows（PowerShell）：**
-
-```powershell
-irm https://raw.githubusercontent.com/host452b/arxs/main/install.ps1 | iex
-```
-
-**Go install：**
+### 方式一 — Go install（推荐，需 Go ≥ 1.21）
 
 ```bash
 go install github.com/host452b/arxs@latest
 ```
 
-**从源码编译：**
+安装到 `$(go env GOPATH)/bin`，确保该目录已在 `$PATH` 中：
 
 ```bash
+# 加入 ~/.bashrc 或 ~/.zshrc（如未配置）：
+export PATH="$PATH:$(go env GOPATH)/bin"
+```
+
+验证安装：
+
+```bash
+arxs --version   # arxs v2.0.2
+```
+
+### 方式二 — 一键脚本（macOS / Linux，无需 Go）
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/host452b/arxs/main/install.sh | sh
+```
+
+默认安装到 `/usr/local/bin/arxs`。自定义目录：
+
+```bash
+INSTALL_DIR=~/.local/bin curl -fsSL https://raw.githubusercontent.com/host452b/arxs/main/install.sh | sh
+```
+
+### 方式三 — Windows（PowerShell）
+
+```powershell
+irm https://raw.githubusercontent.com/host452b/arxs/main/install.ps1 | iex
+```
+
+### 方式四 — 从源码编译
+
+```bash
+# 需要 Go 1.21+
 git clone https://github.com/host452b/arxs.git
 cd arxs
-go build -o arxs .
+go build -o arxs .          # Linux/macOS
+go build -o arxs.exe .      # Windows
+```
+
+将二进制文件移入 `$PATH` 中的目录：
+
+```bash
+mv arxs /usr/local/bin/
+```
+
+### 验证安装
+
+```bash
+arxs --version              # 显示版本号
+arxs --help                 # 完整使用说明
+arxs search --help          # 搜索参数详细说明
+arxs search --list-subjects # 列出所有 53 个学科分类代码
 ```
 
 ## 快速开始
