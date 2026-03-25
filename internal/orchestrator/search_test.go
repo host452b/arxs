@@ -68,6 +68,27 @@ func TestSearch_DeduplicatesByDOI(t *testing.T) {
 	}
 }
 
+func TestSearch_DeduplicatesByTitle(t *testing.T) {
+	// Same title, no DOI — should dedup by normalized title
+	paper1 := model.Paper{ID: "a1", Source: "arxiv", Title: "Machine Learning Survey"}
+	paper2 := model.Paper{ID: "z1", Source: "zenodo", Title: "Machine Learning Survey"}
+
+	p1 := &mockProvider{id: "arxiv", papers: []model.Paper{paper1}}
+	p2 := &mockProvider{id: "zenodo", papers: []model.Paper{paper2}}
+
+	result, err := orchestrator.Search(context.Background(), []provider.Provider{p1, p2},
+		provider.Query{Keywords: "test", Max: 10}, provider.SubjectFilter{}, log.New(false))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Total != 1 {
+		t.Errorf("expected title dedup to 1, got %d", result.Total)
+	}
+	if result.Groups[0].Papers[0].Source != "arxiv" {
+		t.Error("primary source (arxiv) should be kept after title dedup")
+	}
+}
+
 func TestSearch_PartialFailure(t *testing.T) {
 	p1 := &mockProvider{id: "arxiv", papers: []model.Paper{{ID: "a1", Source: "arxiv"}}}
 	p2 := &mockProvider{id: "zenodo", err: errors.New("network error")}
