@@ -119,20 +119,21 @@ EXAMPLES:
 }
 
 var (
-	flagKey       string
-	flagTitle     string
-	flagAbs       string
-	flagAuthor    string
-	flagSubjects  []string
-	flagOp        string
-	flagFrom      string
-	flagTo        string
-	flagRecent    string
-	flagMax       int
-	flagOutput    string
-	flagNoCache   bool
-	flagSort      string
-	flagSortOrder string
+	flagKey          string
+	flagTitle        string
+	flagAbs          string
+	flagAuthor       string
+	flagSubjects     []string
+	flagOp           string
+	flagFrom         string
+	flagTo           string
+	flagRecent       string
+	flagMax          int
+	flagOutput       string
+	flagNoCache      bool
+	flagSort         string
+	flagSortOrder    string
+	flagListSubjects bool
 )
 
 func init() {
@@ -151,11 +152,19 @@ func init() {
 	searchCmd.Flags().BoolVar(&flagNoCache, "no-cache", false, "Skip cache")
 	searchCmd.Flags().StringVar(&flagSort, "sort", "submitted", "Sort by: relevance, submitted, updated, citations")
 	searchCmd.Flags().StringVar(&flagSortOrder, "order", "desc", "Sort order: asc, desc")
+	searchCmd.Flags().BoolVar(&flagListSubjects, "list-subjects", false, "Print all valid subject codes and aliases, then exit")
 
 	rootCmd.AddCommand(searchCmd)
 }
 
 func runSearch(cmd *cobra.Command, args []string) error {
+	if flagListSubjects {
+		for _, s := range subject.ValidSubjects() {
+			fmt.Println(s)
+		}
+		return nil
+	}
+
 	if flagKey == "" && flagTitle == "" && flagAbs == "" && flagAuthor == "" {
 		return fmt.Errorf("at least one search term is required (-k, -t, -b, or -a)")
 	}
