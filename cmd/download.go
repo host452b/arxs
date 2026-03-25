@@ -140,8 +140,8 @@ func runDownload(cmd *cobra.Command, args []string) error {
 }
 
 func loadPapersFromFile(path string) ([]model.Paper, error) {
-	// Try MultiSourceResult first
-	if multi, err := store.ReadMultiSourceResult(path); err == nil {
+	// Try MultiSourceResult first (has "groups" field)
+	if multi, err := store.ReadMultiSourceResult(path); err == nil && len(multi.Groups) > 0 {
 		return multi.AllPapers(), nil
 	}
 	// Fall back to legacy SearchResult
