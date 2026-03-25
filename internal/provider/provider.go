@@ -36,7 +36,7 @@ type SubjectFilter struct {
 	ArxivCats        []string // arXiv: ["cs.AI","cs.LG"]
 	OpenAlexConcepts []string // OpenAlex concept IDs: ["C41008148"]
 	ZenodoKeywords   []string // Zenodo subject keywords: ["machine learning"]
-	OSFProvider      string   // "socarxiv" or "edarxiv"
+	OSFProviders     []string // "socarxiv", "edarxiv", or both
 	OSFSubjects      []string // OSF subject display strings
 }
 

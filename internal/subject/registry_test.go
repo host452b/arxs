@@ -58,3 +58,45 @@ func TestLookup_CommaAlias(t *testing.T) {
 		t.Errorf("expected arxiv as primary for cs, got %s", result.Providers[0])
 	}
 }
+
+func TestLookup_EmptyInput(t *testing.T) {
+	_, err := subject.Lookup([]string{})
+	if err == nil {
+		t.Fatal("expected error for empty input")
+	}
+}
+
+func TestLookup_CommaSeparated(t *testing.T) {
+	result, err := subject.Lookup([]string{"cs.ai,sociology"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	found := map[provider.ProviderID]bool{}
+	for _, p := range result.Providers {
+		found[p] = true
+	}
+	if !found[provider.ProviderArxiv] {
+		t.Error("expected arxiv in providers")
+	}
+	if !found[provider.ProviderSocArxiv] {
+		t.Error("expected socarxiv in providers")
+	}
+}
+
+func TestLookup_OSFProvidersMerged(t *testing.T) {
+	// psychology → socarxiv, education → edarxiv; both must be present
+	result, err := subject.Lookup([]string{"psychology", "education"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	found := map[string]bool{}
+	for _, p := range result.Filter.OSFProviders {
+		found[p] = true
+	}
+	if !found["socarxiv"] {
+		t.Error("expected socarxiv in OSFProviders")
+	}
+	if !found["edarxiv"] {
+		t.Error("expected edarxiv in OSFProviders")
+	}
+}

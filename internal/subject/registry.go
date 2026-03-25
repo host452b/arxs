@@ -21,7 +21,7 @@ type entry struct {
 	arxivCats        []string
 	openAlexConcepts []string
 	zenodoKeywords   []string
-	osfProvider      string
+	osfProviders     []string
 	osfSubjects      []string
 }
 
@@ -35,7 +35,7 @@ var registry = map[string]entry{
 	"cs.cv": {providers: []provider.ProviderID{provider.ProviderArxiv, provider.ProviderZenodo, provider.ProviderSocArxiv}, arxivCats: []string{"cs.CV"}, openAlexConcepts: []string{"C31972630"}, zenodoKeywords: []string{"computer vision"}},
 	"cs.cr": {providers: []provider.ProviderID{provider.ProviderArxiv, provider.ProviderZenodo, provider.ProviderSocArxiv}, arxivCats: []string{"cs.CR"}, openAlexConcepts: []string{"C38652104"}, zenodoKeywords: []string{"cybersecurity"}},
 	"cs.ro": {providers: []provider.ProviderID{provider.ProviderArxiv, provider.ProviderZenodo, provider.ProviderSocArxiv}, arxivCats: []string{"cs.RO"}, openAlexConcepts: []string{"C11413529"}, zenodoKeywords: []string{"robotics"}},
-	"cs.cy": {providers: []provider.ProviderID{provider.ProviderArxiv, provider.ProviderSocArxiv, provider.ProviderZenodo}, arxivCats: []string{"cs.CY"}, openAlexConcepts: []string{"C17744445"}, zenodoKeywords: []string{"computers and society"}, osfProvider: "socarxiv", osfSubjects: []string{"Social and Behavioral Sciences"}},
+	"cs.cy": {providers: []provider.ProviderID{provider.ProviderArxiv, provider.ProviderSocArxiv, provider.ProviderZenodo}, arxivCats: []string{"cs.CY"}, openAlexConcepts: []string{"C17744445"}, zenodoKeywords: []string{"computers and society"}, osfProviders: []string{"socarxiv"}, osfSubjects: []string{"Social and Behavioral Sciences"}},
 	"cs.hc": {providers: []provider.ProviderID{provider.ProviderArxiv, provider.ProviderZenodo, provider.ProviderSocArxiv}, arxivCats: []string{"cs.HC"}, openAlexConcepts: []string{"C121332964"}, zenodoKeywords: []string{"human-computer interaction"}},
 	"cs.se": {providers: []provider.ProviderID{provider.ProviderArxiv, provider.ProviderZenodo}, arxivCats: []string{"cs.SE"}, zenodoKeywords: []string{"software engineering"}},
 	"cs.dc": {providers: []provider.ProviderID{provider.ProviderArxiv, provider.ProviderZenodo}, arxivCats: []string{"cs.DC"}, zenodoKeywords: []string{"distributed computing"}},
@@ -45,7 +45,7 @@ var registry = map[string]entry{
 
 	// ── Physics ───────────────────────────────────────────────────────
 	"physics":  {providers: []provider.ProviderID{provider.ProviderArxiv, provider.ProviderZenodo}, arxivCats: []string{"physics", "astro-ph", "cond-mat", "gr-qc", "hep-ex", "hep-lat", "hep-ph", "hep-th", "math-ph", "nlin", "nucl-ex", "nucl-th", "quant-ph"}, zenodoKeywords: []string{"physics"}},
-	"hep-th":   {providers: []provider.ProviderID{provider.ProviderArxiv, provider.ProviderZenodo}, arxivCats: []string{"hep-th"}, openAlexConcepts: []string{"C121332964"}, zenodoKeywords: []string{"high energy physics theoretical"}},
+	"hep-th":   {providers: []provider.ProviderID{provider.ProviderArxiv, provider.ProviderZenodo}, arxivCats: []string{"hep-th"}, zenodoKeywords: []string{"high energy physics theoretical"}},
 	"hep-ex":   {providers: []provider.ProviderID{provider.ProviderArxiv, provider.ProviderZenodo}, arxivCats: []string{"hep-ex"}, zenodoKeywords: []string{"high energy physics experimental"}},
 	"hep-ph":   {providers: []provider.ProviderID{provider.ProviderArxiv, provider.ProviderZenodo}, arxivCats: []string{"hep-ph"}, zenodoKeywords: []string{"phenomenology"}},
 	"hep-lat":  {providers: []provider.ProviderID{provider.ProviderArxiv, provider.ProviderZenodo}, arxivCats: []string{"hep-lat"}, zenodoKeywords: []string{"lattice QCD"}},
@@ -84,18 +84,18 @@ var registry = map[string]entry{
 	"eess.sp": {providers: []provider.ProviderID{provider.ProviderArxiv, provider.ProviderZenodo}, arxivCats: []string{"eess.SP"}, zenodoKeywords: []string{"signal processing"}},
 
 	// ── Social Sciences ───────────────────────────────────────────────
-	"sociology":  {providers: []provider.ProviderID{provider.ProviderSocArxiv, provider.ProviderOpenAlex, provider.ProviderZenodo}, openAlexConcepts: []string{"C144024400"}, zenodoKeywords: []string{"sociology"}, osfProvider: "socarxiv", osfSubjects: []string{"Social and Behavioral Sciences"}},
-	"law":        {providers: []provider.ProviderID{provider.ProviderSocArxiv, provider.ProviderOpenAlex, provider.ProviderZenodo}, openAlexConcepts: []string{"C18214049"}, zenodoKeywords: []string{"law"}, osfProvider: "socarxiv", osfSubjects: []string{"Law"}},
-	"psychology": {providers: []provider.ProviderID{provider.ProviderSocArxiv, provider.ProviderEdArxiv, provider.ProviderZenodo}, openAlexConcepts: []string{"C15744967"}, zenodoKeywords: []string{"psychology"}, osfProvider: "socarxiv", osfSubjects: []string{"Social and Behavioral Sciences"}},
-	"political":  {providers: []provider.ProviderID{provider.ProviderSocArxiv, provider.ProviderOpenAlex, provider.ProviderZenodo}, openAlexConcepts: []string{"C17744445"}, zenodoKeywords: []string{"political science"}, osfProvider: "socarxiv", osfSubjects: []string{"Political Science"}},
+	"sociology":  {providers: []provider.ProviderID{provider.ProviderSocArxiv, provider.ProviderOpenAlex, provider.ProviderZenodo}, openAlexConcepts: []string{"C144024400"}, zenodoKeywords: []string{"sociology"}, osfProviders: []string{"socarxiv"}, osfSubjects: []string{"Social and Behavioral Sciences"}},
+	"law":        {providers: []provider.ProviderID{provider.ProviderSocArxiv, provider.ProviderOpenAlex, provider.ProviderZenodo}, openAlexConcepts: []string{"C18214049"}, zenodoKeywords: []string{"law"}, osfProviders: []string{"socarxiv"}, osfSubjects: []string{"Law"}},
+	"psychology": {providers: []provider.ProviderID{provider.ProviderSocArxiv, provider.ProviderEdArxiv, provider.ProviderZenodo}, openAlexConcepts: []string{"C15744967"}, zenodoKeywords: []string{"psychology"}, osfProviders: []string{"socarxiv"}, osfSubjects: []string{"Social and Behavioral Sciences"}},
+	"political":  {providers: []provider.ProviderID{provider.ProviderSocArxiv, provider.ProviderOpenAlex, provider.ProviderZenodo}, openAlexConcepts: []string{"C17744445"}, zenodoKeywords: []string{"political science"}, osfProviders: []string{"socarxiv"}, osfSubjects: []string{"Political Science"}},
 	"economics":  {providers: []provider.ProviderID{provider.ProviderOpenAlex, provider.ProviderArxiv, provider.ProviderZenodo}, openAlexConcepts: []string{"C162324750"}, zenodoKeywords: []string{"economics"}},
 	"management": {providers: []provider.ProviderID{provider.ProviderOpenAlex, provider.ProviderSocArxiv, provider.ProviderZenodo}, openAlexConcepts: []string{"C144133560"}, zenodoKeywords: []string{"management"}},
 
 	// ── Education ─────────────────────────────────────────────────────
-	"education": {providers: []provider.ProviderID{provider.ProviderEdArxiv, provider.ProviderSocArxiv, provider.ProviderZenodo}, openAlexConcepts: []string{"C142362112"}, zenodoKeywords: []string{"education"}, osfProvider: "edarxiv", osfSubjects: []string{"Education"}},
+	"education": {providers: []provider.ProviderID{provider.ProviderEdArxiv, provider.ProviderSocArxiv, provider.ProviderZenodo}, openAlexConcepts: []string{"C142362112"}, zenodoKeywords: []string{"education"}, osfProviders: []string{"edarxiv"}, osfSubjects: []string{"Education"}},
 
 	// ── Philosophy ────────────────────────────────────────────────────
-	"philosophy": {providers: []provider.ProviderID{provider.ProviderOpenAlex, provider.ProviderSocArxiv, provider.ProviderZenodo}, arxivCats: []string{"physics.hist-ph"}, openAlexConcepts: []string{"C138885662"}, zenodoKeywords: []string{"philosophy"}, osfProvider: "socarxiv", osfSubjects: []string{"Philosophy"}},
+	"philosophy": {providers: []provider.ProviderID{provider.ProviderOpenAlex, provider.ProviderSocArxiv, provider.ProviderZenodo}, arxivCats: []string{"physics.hist-ph"}, openAlexConcepts: []string{"C138885662"}, zenodoKeywords: []string{"philosophy"}, osfProviders: []string{"socarxiv"}, osfSubjects: []string{"Philosophy"}},
 	"ethics":     {providers: []provider.ProviderID{provider.ProviderOpenAlex, provider.ProviderSocArxiv, provider.ProviderZenodo}, openAlexConcepts: []string{"C119599485"}, zenodoKeywords: []string{"ethics"}},
 }
 
@@ -123,6 +123,10 @@ func Lookup(subjects []string) (*LookupResult, error) {
 		}
 	}
 
+	if len(expanded) == 0 {
+		return nil, fmt.Errorf("no subjects provided")
+	}
+
 	// Validate all subjects first
 	for _, s := range expanded {
 		if _, ok := registry[s]; !ok {
@@ -147,9 +151,7 @@ func Lookup(subjects []string) (*LookupResult, error) {
 		filter.OpenAlexConcepts = unionStrings(filter.OpenAlexConcepts, e.openAlexConcepts)
 		filter.ZenodoKeywords = unionStrings(filter.ZenodoKeywords, e.zenodoKeywords)
 		filter.OSFSubjects = unionStrings(filter.OSFSubjects, e.osfSubjects)
-		if filter.OSFProvider == "" && e.osfProvider != "" {
-			filter.OSFProvider = e.osfProvider
-		}
+		filter.OSFProviders = unionStrings(filter.OSFProviders, e.osfProviders)
 	}
 
 	return &LookupResult{Providers: providers, Filter: filter}, nil
