@@ -84,3 +84,29 @@ func TestReadResultsNotFound(t *testing.T) {
 		t.Fatal("expected error for nonexistent file")
 	}
 }
+
+func TestWriteReadMultiSourceResult(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "multi.json")
+
+	want := &model.MultiSourceResult{
+		Total: 2,
+		Groups: []model.SourceGroup{
+			{Source: "arxiv", Count: 1, Papers: []model.Paper{{ID: "2401.001", Source: "arxiv", Title: "T1"}}},
+			{Source: "zenodo", Count: 1, Papers: []model.Paper{{ID: "z123", Source: "zenodo", Title: "T2"}}},
+		},
+	}
+	if err := WriteMultiSourceResult(path, want); err != nil {
+		t.Fatal(err)
+	}
+	got, err := ReadMultiSourceResult(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Total != want.Total {
+		t.Errorf("total: got %d want %d", got.Total, want.Total)
+	}
+	if len(got.Groups) != 2 {
+		t.Fatalf("groups: got %d want 2", len(got.Groups))
+	}
+}
