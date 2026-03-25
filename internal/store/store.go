@@ -28,3 +28,25 @@ func ReadResults(path string) (*model.SearchResult, error) {
 	}
 	return &result, nil
 }
+
+// WriteMultiSourceResult writes a MultiSourceResult to a JSON file.
+func WriteMultiSourceResult(path string, result *model.MultiSourceResult) error {
+	data, err := json.MarshalIndent(result, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, data, 0644)
+}
+
+// ReadMultiSourceResult reads a MultiSourceResult from a JSON file.
+func ReadMultiSourceResult(path string) (*model.MultiSourceResult, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var result model.MultiSourceResult
+	if err := json.Unmarshal(data, &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
