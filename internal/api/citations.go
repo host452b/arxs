@@ -116,7 +116,7 @@ func (cf *CitationFetcher) fetchBatch(ids []string) ([]batchResponseItem, error)
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", userAgent)
+	req.Header.Set("User-Agent", UserAgent)
 
 	resp, err := cf.httpClient.Do(req)
 	if err != nil {
