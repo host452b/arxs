@@ -52,7 +52,9 @@ func New(opts ...Option) *Provider {
 func (p *Provider) ID() provider.ProviderID { return provider.ProviderArxiv }
 
 func (p *Provider) Search(ctx context.Context, q provider.Query, f provider.SubjectFilter) ([]model.Paper, error) {
-	p.rateLimiter.Wait()
+	if err := p.rateLimiter.Wait(ctx); err != nil {
+		return nil, err
+	}
 
 	// Build arXiv QueryParams from provider.Query + SubjectFilter
 	params := api.QueryParams{
@@ -121,19 +123,25 @@ func (p *Provider) DownloadPDF(ctx context.Context, paper model.Paper) ([]byte, 
 	if paper.PDFUrl == "" {
 		return nil, fmt.Errorf("arxiv: no PDF URL for %s", paper.ID)
 	}
-	p.rateLimiter.Wait()
+	if err := p.rateLimiter.Wait(ctx); err != nil {
+		return nil, err
+	}
 	req, err := http.NewRequestWithContext(ctx, "GET", paper.PDFUrl, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("arxiv: creating download request: %w", err)
 	}
 	req.Header.Set("User-Agent", api.UserAgent)
 	resp, err := p.httpClient.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("arxiv: download request failed: %w", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("arxiv: download HTTP %d", resp.StatusCode)
 	}
-	return io.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("arxiv: reading download body: %w", err)
+	}
+	return data, nil
 }
