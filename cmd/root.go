@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/joejiang/arxs/internal/log"
 	"github.com/spf13/cobra"
 )
 
 const version = "1.0.3"
+
+var flagDebug bool
 
 var rootCmd = &cobra.Command{
 	Use:   "arxs",
@@ -87,4 +90,13 @@ func init() {
 	rootCmd.Version = version
 	rootCmd.SetVersionTemplate(fmt.Sprintf(
 		"arxs v%s\nThank you to arXiv for use of its open access interoperability.\n", version))
+
+	rootCmd.PersistentFlags().BoolVar(&flagDebug, "debug", false, "Enable structured JSON debug logging to stderr (or set ARXS_DEBUG=1)")
+
+	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		enabled := flagDebug || os.Getenv("ARXS_DEBUG") == "1"
+		logger := log.New(enabled)
+		cmd.SetContext(log.WithLogger(cmd.Context(), logger))
+		return nil
+	}
 }
