@@ -4,7 +4,7 @@ package provider
 import (
 	"context"
 
-	"github.com/host452b/arxs/internal/model"
+	"github.com/host452b/arxs/v2/internal/model"
 )
 
 // ProviderID identifies a paper source.

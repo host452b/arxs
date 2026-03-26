@@ -1,6 +1,6 @@
-module github.com/host452b/arxs
+module github.com/host452b/arxs/v2
 
-go 1.26.1
+go 1.21
 
 require github.com/spf13/cobra v1.10.2
 

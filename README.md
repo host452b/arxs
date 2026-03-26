@@ -23,7 +23,7 @@
 ### Option 1 — Go install (recommended if you have Go ≥ 1.21)
 
 ```bash
-go install github.com/host452b/arxs@latest
+go install github.com/host452b/arxs/v2@latest
 ```
 
 `arxs` is installed to `$(go env GOPATH)/bin`. Make sure that directory is in your `$PATH`:
@@ -80,7 +80,7 @@ mv arxs /usr/local/bin/     # or: ~/.local/bin/, ~/bin/, etc.
 ### Option 5 — Pin a specific version
 
 ```bash
-go install github.com/host452b/arxs@v2.0.2
+go install github.com/host452b/arxs/v2@v2.0.2
 ```
 
 ### Verify installation
@@ -300,7 +300,7 @@ arxs about
 This tool fully respects [arXiv's robots.txt](https://arxiv.org/robots.txt) and crawling policies:
 
 - **No web scraping**: uses the official arXiv API (`export.arxiv.org`) exclusively, not the website
-- **Rate limit**: >= 3s between requests, hardcoded and non-configurable — exceeds the robots.txt `Crawl-delay: 15` requirement since we use the dedicated API endpoint, not the website
+- **Rate limit**: >= 3s between requests, hardcoded and non-configurable — the `Crawl-delay: 15` in robots.txt applies to website crawlers; this tool uses only the dedicated API endpoint (`export.arxiv.org`), which carries no crawl-delay directive
 - **Same-day query caching**: avoids redundant requests; arXiv data updates once daily at UTC midnight
 - **Custom User-Agent**: all requests identify as `arxs/<version>` per robots.txt best practices
 - **No access to restricted paths**: the tool never touches `/search`, `/auth`, `/user`, or any path disallowed by robots.txt

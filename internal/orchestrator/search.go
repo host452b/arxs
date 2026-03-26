@@ -9,9 +9,9 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/host452b/arxs/internal/log"
-	"github.com/host452b/arxs/internal/model"
-	"github.com/host452b/arxs/internal/provider"
+	"github.com/host452b/arxs/v2/internal/log"
+	"github.com/host452b/arxs/v2/internal/model"
+	"github.com/host452b/arxs/v2/internal/provider"
 )
 
 type providerResult struct {

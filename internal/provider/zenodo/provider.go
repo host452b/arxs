@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/host452b/arxs/internal/api"
-	"github.com/host452b/arxs/internal/model"
-	"github.com/host452b/arxs/internal/provider"
+	"github.com/host452b/arxs/v2/internal/api"
+	"github.com/host452b/arxs/v2/internal/model"
+	"github.com/host452b/arxs/v2/internal/provider"
 )
 
 const defaultBaseURL = "https://zenodo.org/api"

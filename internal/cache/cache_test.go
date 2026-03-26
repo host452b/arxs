@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/host452b/arxs/internal/model"
+	"github.com/host452b/arxs/v2/internal/model"
 )
 
 func TestCacheMissAndHit(t *testing.T) {

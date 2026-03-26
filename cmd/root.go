@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/host452b/arxs/internal/log"
+	"github.com/host452b/arxs/v2/internal/log"
 	"github.com/spf13/cobra"
 )
 
