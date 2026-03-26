@@ -24,7 +24,7 @@ export PATH="$PATH:$(go env GOPATH)/bin"
 验证安装：
 
 ```bash
-arxs --version   # arxs v2.0.2
+arxs --version   # arxs v2.0.3
 ```
 
 ### 方式二 — 一键脚本（macOS / Linux，无需 Go）

@@ -36,7 +36,7 @@ export PATH="$PATH:$(go env GOPATH)/bin"
 Verify:
 
 ```bash
-arxs --version   # arxs v2.0.2
+arxs --version   # arxs v2.0.3
 ```
 
 ### Option 2 — Shell script (macOS / Linux, no Go required)
@@ -80,7 +80,7 @@ mv arxs /usr/local/bin/     # or: ~/.local/bin/, ~/bin/, etc.
 ### Option 5 — Pin a specific version
 
 ```bash
-go install github.com/host452b/arxs/v2@v2.0.2
+go install github.com/host452b/arxs/v2@v2.0.3
 ```
 
 ### Verify installation
