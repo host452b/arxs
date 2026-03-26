@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/host452b/arxs/internal/provider"
-	socarxivprovider "github.com/host452b/arxs/internal/provider/socarxiv"
+	"github.com/host452b/arxs/v2/internal/provider"
+	socarxivprovider "github.com/host452b/arxs/v2/internal/provider/socarxiv"
 )
 
 func sampleOSFResponse() []byte {

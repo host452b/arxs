@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/host452b/arxs/internal/model"
+	"github.com/host452b/arxs/v2/internal/model"
 )
 
 // Cache provides same-day query caching backed by the filesystem.

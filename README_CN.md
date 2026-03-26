@@ -11,7 +11,7 @@
 ### 方式一 — Go install（推荐，需 Go ≥ 1.21）
 
 ```bash
-go install github.com/host452b/arxs@latest
+go install github.com/host452b/arxs/v2@latest
 ```
 
 安装到 `$(go env GOPATH)/bin`，确保该目录已在 `$PATH` 中：
@@ -243,7 +243,8 @@ arxs about
 | `--key-title` | `-t` | 标题搜索 | — |
 | `--key-abs` | `-b` | 摘要搜索 | — |
 | `--key-author` | `-a` | 作者搜索 | — |
-| `--subject` | `-s` | 学科分类 | 全部 |
+| `--subject` | `-s` | 学科分类（可重复，OR 逻辑） | 仅 arXiv |
+| `--list-subjects` | — | 打印所有学科代码并退出 | — |
 | `--op` | — | 字段间关系 | `and` |
 | `--from` | — | 起始日期 | 不限 |
 | `--to` | — | 截止日期 | 不限 |
@@ -277,7 +278,7 @@ arxs about
 本工具严格遵守 [arXiv 的 robots.txt](https://arxiv.org/robots.txt) 爬虫协议：
 
 - **不爬取网页**：仅使用 arXiv 官方 API（`export.arxiv.org`），不访问网站页面
-- **请求限速**：间隔 ≥ 3 秒，硬编码不可绕过——超过 robots.txt 中 `Crawl-delay: 15` 的要求（因为我们使用专用 API 端点而非网站）
+- **请求限速**：间隔 ≥ 3 秒，硬编码不可绕过——robots.txt 中的 `Crawl-delay: 15` 适用于网页爬虫；本工具仅使用专用 API 端点（`export.arxiv.org`），该端点无 crawl-delay 限制
 - **同日缓存**：避免重复请求；arXiv 数据每日 UTC 午夜更新一次
 - **User-Agent 标识**：所有请求标识为 `arxs/<version>`，遵循 robots.txt 最佳实践
 - **不访问受限路径**：工具绝不访问 `/search`、`/auth`、`/user` 或 robots.txt 中禁止的任何路径

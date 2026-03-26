@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/host452b/arxs/internal/parser"
+	"github.com/host452b/arxs/v2/internal/parser"
 )
 
 // QueryParams holds the user's search parameters.
